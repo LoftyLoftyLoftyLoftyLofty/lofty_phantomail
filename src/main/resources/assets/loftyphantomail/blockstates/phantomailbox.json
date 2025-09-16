@@ -1,0 +1,10 @@
+{
+  "variants" : {
+    "" : {
+      "model" : "loftyphantomail:block/phantomailbox"
+    },
+    "open" : {
+      "model" : "loftyphantomail:block/phantomailboxopen"
+    }
+  }
+}
