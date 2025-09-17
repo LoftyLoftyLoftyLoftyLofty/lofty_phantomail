@@ -1,6 +1,7 @@
 package games.lofty.phantomail.block;
 
 import games.lofty.phantomail.Phantomail;
+import games.lofty.phantomail.block.custom.PhantomailboxBlock;
 import games.lofty.phantomail.item.ModItems;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
@@ -17,7 +18,13 @@ public class ModBlocks {
             DeferredRegister.createBlocks(Phantomail.MOD_ID);
 
     public static final DeferredBlock<Block> PHANTOMAILBOX = registerBlock("phantomailbox",
-            () -> new Block(BlockBehaviour.Properties.of().strength(4f)));
+            () -> new PhantomailboxBlock
+                    (
+                        BlockBehaviour.Properties.of()
+                        .strength(2f)
+                        .noOcclusion()
+                    )
+            );
 
     private static<T extends Block> DeferredBlock<T> registerBlock(String name, Supplier<T> block)
     {

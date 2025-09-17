@@ -1,0 +1,32 @@
+{
+  "type" : "minecraft:crafting_shaped",
+  "category" : "misc",
+  "key" : {
+    "A" :
+    {
+      "item" : "minecraft:hopper"
+    },
+    "B" :
+    {
+      "item" : "minecraft:phantom_membrane"
+    },
+    "C" :
+    {
+      "item" : "minecraft:soul_torch"
+    },
+    "D" :
+    {
+      "item" : "minecraft:daylight_sensor"
+    }
+  },
+  "pattern" :
+  [
+    " D ",
+    "BAB",
+    " C "
+  ],
+  "result" : {
+    "count" : 1,
+    "id" : "loftyphantomail:phantomailbox"
+  }
+}

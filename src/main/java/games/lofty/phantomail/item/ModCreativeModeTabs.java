@@ -18,11 +18,10 @@ public class ModCreativeModeTabs {
 
     public static final Supplier<CreativeModeTab> PHANTOMAIL_ITEMS_TAB = CREATIVE_MODE_TAB.register("phantomail_items_tab",
             () -> CreativeModeTab.builder()
-                    .icon(()-> new ItemStack(ModItems.PHANTOMAIL_BUNDLE.get()))
+                    .icon(()-> new ItemStack(ModItems.PHANTOMAIL_STAMP.get()))
                     .title(Component.translatable("creativetab.loftyphantomail.items"))
                     //.withTabsBefore(ResourceLocation.fromNamespaceAndPath(Phantomail.MOD_ID, "phantomail_items_tab"))
                     .displayItems(((itemDisplayParameters, output) -> {
-                        output.accept(ModItems.PHANTOMAIL_BUNDLE);
                         output.accept(ModItems.PHANTOMAIL_STAMP);
                         output.accept(ModBlocks.PHANTOMAILBOX);
                     }))

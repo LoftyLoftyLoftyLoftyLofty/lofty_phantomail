@@ -1,0 +1,22 @@
+{
+  "type" : "minecraft:crafting_shapeless",
+  "category" : "misc",
+  "ingredients" : [
+    {
+      "item" : "minecraft:blue_dye"
+    },
+    {
+      "item" : "minecraft:emerald"
+    },
+    {
+      "item" : "minecraft:name_tag"
+    },
+    {
+      "item" : "minecraft:paper"
+    }
+  ],
+  "result" : {
+    "count" : 1,
+    "id" : "loftyphantomail:phantomailstamp"
+  }
+}

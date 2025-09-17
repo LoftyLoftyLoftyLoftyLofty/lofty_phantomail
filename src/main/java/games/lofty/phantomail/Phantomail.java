@@ -1,9 +1,9 @@
 package games.lofty.phantomail;
 
 import games.lofty.phantomail.block.ModBlocks;
+import games.lofty.phantomail.block.entity.ModBlockEntities;
 import games.lofty.phantomail.item.ModCreativeModeTabs;
 import games.lofty.phantomail.item.ModItems;
-import net.minecraft.world.item.CreativeModeTabs;
 import org.slf4j.Logger;
 
 import com.mojang.logging.LogUtils;
@@ -48,6 +48,9 @@ public class Phantomail {
 
         //hook up blocks
         ModBlocks.register(modEventBus);
+
+        //hook up block entities
+        ModBlockEntities.register(modEventBus);
 
         // Register the item to a creative tab
         modEventBus.addListener(this::addCreative);
