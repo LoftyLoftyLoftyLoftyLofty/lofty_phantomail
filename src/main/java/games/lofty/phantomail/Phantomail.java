@@ -4,6 +4,9 @@ import games.lofty.phantomail.block.ModBlocks;
 import games.lofty.phantomail.block.entity.ModBlockEntities;
 import games.lofty.phantomail.item.ModCreativeModeTabs;
 import games.lofty.phantomail.item.ModItems;
+import games.lofty.phantomail.screen.ModMenuTypes;
+import games.lofty.phantomail.screen.custom.PhantomailboxScreen;
+import net.neoforged.neoforge.client.event.RegisterMenuScreensEvent;
 import org.slf4j.Logger;
 
 import com.mojang.logging.LogUtils;
@@ -52,6 +55,9 @@ public class Phantomail {
         //hook up block entities
         ModBlockEntities.register(modEventBus);
 
+        //hook up menus and gui stuff
+        ModMenuTypes.register(modEventBus);
+
         // Register the item to a creative tab
         modEventBus.addListener(this::addCreative);
 
@@ -90,6 +96,12 @@ public class Phantomail {
     public static class ClientModEvents {
         @SubscribeEvent
         public static void onClientSetup(FMLClientSetupEvent event) {
+        }
+
+        @SubscribeEvent
+        public static void registerScreens(RegisterMenuScreensEvent event)
+        {
+            event.register(ModMenuTypes.PHANTOMAILBOX_MENU.get(), PhantomailboxScreen::new);
         }
     }
 }

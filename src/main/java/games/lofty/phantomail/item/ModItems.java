@@ -11,7 +11,7 @@ public class ModItems {
     public static final DeferredRegister.Items ITEMS = DeferredRegister.createItems(Phantomail.MOD_ID);
 
     public static final DeferredItem<Item> PHANTOMAIL_STAMP = ITEMS.register("phantomailstamp",
-            () -> new PhantomailStampItem(new Item.Properties()));
+            () -> new PhantomailStampItem(new Item.Properties().stacksTo(1)));
 
     public static void register(IEventBus eventBus) {
         ITEMS.register(eventBus);

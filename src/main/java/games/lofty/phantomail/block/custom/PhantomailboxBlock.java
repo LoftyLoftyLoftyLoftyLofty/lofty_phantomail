@@ -3,10 +3,13 @@ package games.lofty.phantomail.block.custom;
 import com.mojang.serialization.MapCodec;
 import games.lofty.phantomail.block.entity.PhantomailboxBlockEntity;
 import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.ItemInteractionResult;
+import net.minecraft.world.SimpleMenuProvider;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.BlockGetter;
@@ -65,10 +68,19 @@ public class PhantomailboxBlock extends BaseEntityBlock {
     }
 
     @Override
-    protected ItemInteractionResult useItemOn(ItemStack stack, BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hitResult) {
-        System.out.println("TODO - POP THE GUI HERE");
-        level.playSound(player, pos, SoundEvents.BARREL_OPEN, SoundSource.BLOCKS);
+    protected ItemInteractionResult useItemOn(ItemStack stack, BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hitResult)
+    {
+        if( level.getBlockEntity(pos) instanceof PhantomailboxBlockEntity phantomailboxBlockEntity)
+        {
+            //TODO - figure out why this playSound trigger behaves strangely when level is not clientside
+            level.playSound(player, pos, SoundEvents.BARREL_OPEN, SoundSource.BLOCKS);
 
+            if( !level.isClientSide() )
+            {
+                ((ServerPlayer) player).openMenu(new SimpleMenuProvider(phantomailboxBlockEntity, Component.literal("Phantomailbox")),pos);
+                return ItemInteractionResult.SUCCESS;
+            }
+        }
         return ItemInteractionResult.SUCCESS;
     }
 }
