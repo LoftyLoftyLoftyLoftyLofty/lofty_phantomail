@@ -37,7 +37,7 @@ public class PhantomailboxBlockEntity extends BlockEntity implements MenuProvide
     public final ItemStackHandler inventory = new ItemStackHandler(TOTAL_SLOTS) {
         @Override
         protected int getStackLimit(int slot, ItemStack stack) {
-            //only allow one stamp in the stamp slot
+            //only allow one stamp in the stamp slot at a time
             if( slot == 0 )
                 return 1;
 

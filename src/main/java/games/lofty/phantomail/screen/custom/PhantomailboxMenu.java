@@ -4,6 +4,7 @@ import games.lofty.phantomail.block.ModBlocks;
 import games.lofty.phantomail.block.entity.PhantomailboxBlockEntity;
 import games.lofty.phantomail.item.ModItems;
 import games.lofty.phantomail.screen.ModMenuTypes;
+import games.lofty.phantomail.util.ModTags;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
@@ -40,8 +41,8 @@ public class PhantomailboxMenu extends AbstractContainerMenu {
             @Override
             public boolean mayPlace(ItemStack stack)
             {
-                //TODO - this should probably be using a tag, but I don't know how to do that
-                return stack.getItem().getDescriptionId().contains("phantomailstamp");
+                //the PhantomailboxBlockEntity class additionally restricts slot 0 to only allow a single item no matter the stack size
+                return stack.is(ModTags.Items.PHANTOMAIL_VALID_POSTAGE);
             }
         });
         this.addSlot( new SlotItemHandler(this.blockEntity.inventory, PhantomailboxBlockEntity.SLOT_OUTGOING, 98, 35));
@@ -63,28 +64,27 @@ public class PhantomailboxMenu extends AbstractContainerMenu {
         if (sourceSlot == null || !sourceSlot.hasItem())
             return ItemStack.EMPTY;
 
-        System.out.println("pIndex = " + String.valueOf(pIndex));
+        //System.out.println("pIndex = " + String.valueOf(pIndex));
         //if the slot ranges from 0 to the combined size of the inventory and hotbar, we are inserting
         if (pIndex < 36)
         {
-            System.out.println("inserting");
+            //System.out.println("inserting");
             //whether or not we attempt to put the item in the outgoing mail slot
             boolean tryOutgoing = false;
 
             //item is a stamp
-            System.out.println(sourceStack.getItem().getDescriptionId());
-            if (sourceStack.getItem().getDescriptionId().contains("phantomailstamp"))
+            if(slots.get(36).mayPlace(sourceStack))
             {
-                System.out.println("stamp yes");
+                //System.out.println("stamp yes");
                 //attempt to place into SLOT_STAMP
                 if (!moveItemStackTo(sourceStack, 36, 37, false))
                 {
-                    System.out.println("move unsuccessful");
+                    //System.out.println("move unsuccessful");
                     tryOutgoing = true;
                 }
                 else
                 {
-                    System.out.println("move successful");
+                    //System.out.println("move successful");
                     return ItemStack.EMPTY;
                 }
             }
@@ -92,22 +92,22 @@ public class PhantomailboxMenu extends AbstractContainerMenu {
             else
             {
                 tryOutgoing = true;
-                System.out.println("stamp no");
+                //System.out.println("stamp no");
             }
 
             //attempting to put something in the mailbox outgoing slot
             if (tryOutgoing)
             {
-                System.out.println("attempt outgoing");
+                //System.out.println("attempt outgoing");
                 //attempt to place into outgoing mail
                 if (!moveItemStackTo(sourceStack, 37, 38, false))
                 {
-                    System.out.println("slot 37 insert fail");
+                    //System.out.println("slot 37 insert fail");
                     return ItemStack.EMPTY;
                 }
                 else
                 {
-                    System.out.println("slot 37 insert success");
+                    //System.out.println("slot 37 insert success");
                     return ItemStack.EMPTY;
                 }
             }
