@@ -1,5 +1,8 @@
 package games.lofty.phantomail.screen.custom;
 
+import games.lofty.phantomail.screen.ModMenuTypes;
+import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.MenuType;
@@ -10,8 +13,13 @@ import org.jetbrains.annotations.Nullable;
 public class PhantomailStampMenu extends AbstractContainerMenu {
 
 
-    protected PhantomailStampMenu(@Nullable MenuType<?> menuType, int containerId) {
+    public PhantomailStampMenu(@Nullable MenuType<?> menuType, int containerId) {
         super(menuType, containerId);
+    }
+
+    public PhantomailStampMenu(int containerId, Inventory inventory, RegistryFriendlyByteBuf registryFriendlyByteBuf)
+    {
+        this(ModMenuTypes.PHANTOMAIL_STAMP_MENU.get(), containerId);
     }
 
     @Override

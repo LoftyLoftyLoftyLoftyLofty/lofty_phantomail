@@ -21,6 +21,8 @@ import org.jetbrains.annotations.Nullable;
 
 public class PhantomailboxMenu extends AbstractContainerMenu {
 
+    //TODO - checkboxes in the GUI for redstone signal alerts when packages are sent or received
+
     public final PhantomailboxBlockEntity blockEntity;
     private final Level level;
 
