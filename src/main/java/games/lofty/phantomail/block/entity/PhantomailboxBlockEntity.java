@@ -202,7 +202,7 @@ public class PhantomailboxBlockEntity extends BlockEntity implements MenuProvide
     private static int getAvailableInboundMailSlots(PhantomailboxBlockEntity phantomailboxBlockEntity)
     {
         int ret = 0;
-        for(int x = PhantomailboxBlockEntity.SLOT_INCOMING_0; x < PhantomailboxBlockEntity.SLOT_INCOMING_3; ++x)
+        for(int x = PhantomailboxBlockEntity.SLOT_INCOMING_0; x <= PhantomailboxBlockEntity.SLOT_INCOMING_3; ++x)
         {
             if(phantomailboxBlockEntity.inventory.getStackInSlot(x).getCount() <= 0)
                 ++ret;
