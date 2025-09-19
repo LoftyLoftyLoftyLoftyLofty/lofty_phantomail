@@ -2,22 +2,18 @@ package games.lofty.phantomail.screen.custom;
 
 import games.lofty.phantomail.block.ModBlocks;
 import games.lofty.phantomail.block.entity.PhantomailboxBlockEntity;
-import games.lofty.phantomail.item.ModItems;
 import games.lofty.phantomail.screen.ModMenuTypes;
 import games.lofty.phantomail.util.ModTags;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.ContainerLevelAccess;
-import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.neoforged.neoforge.items.SlotItemHandler;
-import org.jetbrains.annotations.Nullable;
 
 public class PhantomailboxMenu extends AbstractContainerMenu {
 
@@ -54,7 +50,20 @@ public class PhantomailboxMenu extends AbstractContainerMenu {
         this.addSlot( new SlotItemHandler(this.blockEntity.inventory, PhantomailboxBlockEntity.SLOT_INCOMING_3, 134, 53));
     }
 
-    //TODO - there are a lot of magic number values here that need to be converted to constants
+    //this is overkill but at least there's no ambiguity as to what the hardcoded numbers mean anymore
+    public static final int EXPECTED_PLAYER_INVENTORY_SLOT_BEGIN = 0;
+    public static final int EXPECTED_INVENTORY_SIZE = 27;
+    public static final int EXPECTED_HOTBAR_SIZE = 9;
+    public static final int EXPECTED_PLAYER_INVENTORY_SLOTS = EXPECTED_INVENTORY_SIZE + EXPECTED_HOTBAR_SIZE;
+    public static final int SLOT_OFFSET_PHANTOMAILBOX_INVENTORY_BEGIN = EXPECTED_PLAYER_INVENTORY_SLOTS + EXPECTED_PLAYER_INVENTORY_SLOT_BEGIN;
+    public static final int SLOT_OFFSET_PHANTOMAILBOX_STAMP = SLOT_OFFSET_PHANTOMAILBOX_INVENTORY_BEGIN + PhantomailboxBlockEntity.SLOT_STAMP;
+    public static final int SLOT_OFFSET_PHANTOMAILBOX_OUTGOING = SLOT_OFFSET_PHANTOMAILBOX_INVENTORY_BEGIN + PhantomailboxBlockEntity.SLOT_OUTGOING;
+    public static final int SLOT_OFFSET_PHANTOMAILBOX_INCOMING_0 = SLOT_OFFSET_PHANTOMAILBOX_INVENTORY_BEGIN + PhantomailboxBlockEntity.SLOT_INCOMING_0;
+    public static final int SLOT_OFFSET_PHANTOMAILBOX_INCOMING_1 = SLOT_OFFSET_PHANTOMAILBOX_INVENTORY_BEGIN + PhantomailboxBlockEntity.SLOT_INCOMING_1;
+    public static final int SLOT_OFFSET_PHANTOMAILBOX_INCOMING_2 = SLOT_OFFSET_PHANTOMAILBOX_INVENTORY_BEGIN + PhantomailboxBlockEntity.SLOT_INCOMING_2;
+    public static final int SLOT_OFFSET_PHANTOMAILBOX_INCOMING_3 = SLOT_OFFSET_PHANTOMAILBOX_INVENTORY_BEGIN + PhantomailboxBlockEntity.SLOT_INCOMING_3;
+    public static final int TOTAL_EXPECTED_AVAILABLE_SLOTS = EXPECTED_PLAYER_INVENTORY_SLOTS + PhantomailboxBlockEntity.TOTAL_SLOTS + EXPECTED_PLAYER_INVENTORY_SLOT_BEGIN;
+
     @Override
     public ItemStack quickMoveStack(Player player, int pIndex)
     {
@@ -69,18 +78,18 @@ public class PhantomailboxMenu extends AbstractContainerMenu {
 
         //System.out.println("pIndex = " + String.valueOf(pIndex));
         //if the slot ranges from 0 to the combined size of the inventory and hotbar, we are inserting
-        if (pIndex < 36)
+        if (pIndex < EXPECTED_PLAYER_INVENTORY_SLOTS)
         {
             //System.out.println("inserting");
             //whether or not we attempt to put the item in the outgoing mail slot
             boolean tryOutgoing = false;
 
             //item is a stamp
-            if(slots.get(36).mayPlace(sourceStack))
+            if(slots.get(SLOT_OFFSET_PHANTOMAILBOX_STAMP).mayPlace(sourceStack))
             {
                 //System.out.println("stamp yes");
                 //attempt to place into SLOT_STAMP
-                if (!moveItemStackTo(sourceStack, 36, 37, false))
+                if (!moveItemStackTo(sourceStack, SLOT_OFFSET_PHANTOMAILBOX_STAMP, SLOT_OFFSET_PHANTOMAILBOX_STAMP+1, false))
                 {
                     //System.out.println("move unsuccessful");
                     tryOutgoing = true;
@@ -103,7 +112,7 @@ public class PhantomailboxMenu extends AbstractContainerMenu {
             {
                 //System.out.println("attempt outgoing");
                 //attempt to place into outgoing mail
-                if (!moveItemStackTo(sourceStack, 37, 38, false))
+                if (!moveItemStackTo(sourceStack, SLOT_OFFSET_PHANTOMAILBOX_OUTGOING, SLOT_OFFSET_PHANTOMAILBOX_OUTGOING+1, false))
                 {
                     //System.out.println("slot 37 insert fail");
                     return ItemStack.EMPTY;
@@ -117,10 +126,10 @@ public class PhantomailboxMenu extends AbstractContainerMenu {
         }
 
         //indices 36 and above are slots assigned to the mailbox inventory, we are withdrawing
-        else if (pIndex <= 41)
+        else if (pIndex < TOTAL_EXPECTED_AVAILABLE_SLOTS)
         {
             //attempt merge back into player inventory
-            if (!moveItemStackTo(sourceStack, 0, 36, false))
+            if (!moveItemStackTo(sourceStack, EXPECTED_PLAYER_INVENTORY_SLOT_BEGIN, EXPECTED_PLAYER_INVENTORY_SLOTS, false))
                 return ItemStack.EMPTY;
         }
 
