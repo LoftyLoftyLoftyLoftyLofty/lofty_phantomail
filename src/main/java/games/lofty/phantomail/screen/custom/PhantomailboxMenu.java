@@ -54,6 +54,7 @@ public class PhantomailboxMenu extends AbstractContainerMenu {
         this.addSlot( new SlotItemHandler(this.blockEntity.inventory, PhantomailboxBlockEntity.SLOT_INCOMING_3, 134, 53));
     }
 
+    //TODO - there are a lot of magic number values here that need to be converted to constants
     @Override
     public ItemStack quickMoveStack(Player player, int pIndex)
     {
