@@ -63,6 +63,7 @@ public class PhantomailboxBlock extends BaseEntityBlock {
             if(level.getBlockEntity(pos) instanceof PhantomailboxBlockEntity phantomailboxBlockEntity)
             {
                 phantomailboxBlockEntity.drops();
+                phantomailboxBlockEntity.unregisterUUID();
                 level.updateNeighbourForOutputSignal(pos, this);
             }
         }

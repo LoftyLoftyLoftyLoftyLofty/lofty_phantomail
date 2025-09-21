@@ -1,5 +1,6 @@
 package games.lofty.phantomail.block.entity;
 
+import games.lofty.phantomail.savedata.PhantomailboxRegistrySavedData;
 import games.lofty.phantomail.screen.custom.PhantomailboxMenu;
 import games.lofty.phantomail.util.ModTags;
 import net.minecraft.core.BlockPos;
@@ -24,20 +25,29 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.neoforge.items.ItemStackHandler;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Objects;
+import java.util.UUID;
+
 public class PhantomailboxBlockEntity extends BlockEntity implements MenuProvider {
     public PhantomailboxBlockEntity(BlockPos pos, BlockState blockState) {
         super(ModBlockEntities.PHANTOMAILBOX_BE.get(), pos, blockState);
     }
+
+    //This is false by default and set to true each time the game reloads the blockentity and syncs saved data stuff
+    public boolean hasInitializedSavedData = false;
+
     //TODO - fire a redstone pulse when mail is sent or received, according to the GUI settings
 
-    //TODO - this uuid is how the server identifies a mailbox. this should allow compatibility with mods like Carry On
-    protected String PhantomailboxDeliveryUUID = "";
+    public static final String DEFAULT_UUID = "00000000-0000-0000-0000-000000000000";
+
+    //this uuid is how the server identifies a mailbox. this should allow compatibility with mods like Carry On
+    public String PhantomailboxDeliveryUUID = DEFAULT_UUID;
 
     //TODO - this display string is what is shown in the GUI when players are choosing a delivery address
-    protected String PhantomailboxDisplayAddress = "My mailbox";
+    public String PhantomailboxDisplayAddress = "My mailbox";
 
     //whether or not we've spawned a mail delivery mob of some kind
-    protected boolean courierEnRoute = false;
+    public boolean courierEnRoute = false;
 
     public static boolean hasPendingCourier(PhantomailboxBlockEntity phantomailboxBlockEntity)
     {return phantomailboxBlockEntity.courierEnRoute;}
@@ -88,12 +98,14 @@ public class PhantomailboxBlockEntity extends BlockEntity implements MenuProvide
     protected void saveAdditional(CompoundTag tag, HolderLookup.Provider registries) {
         super.saveAdditional(tag, registries);
         tag.put("inventory",inventory.serializeNBT(registries));
+        tag.putString("uuid",PhantomailboxDeliveryUUID);
     }
 
     @Override
     protected void loadAdditional(CompoundTag tag, HolderLookup.Provider registries) {
         super.loadAdditional(tag, registries);
         inventory.deserializeNBT(registries, tag.getCompound("inventory"));
+        PhantomailboxDeliveryUUID = tag.getString("uuid");
     }
 
     @Override
@@ -221,16 +233,47 @@ public class PhantomailboxBlockEntity extends BlockEntity implements MenuProvide
         return false;
     }
 
+    private boolean uuidInitialized = false;
+    private void initializeUUID()
+    {
+        if(uuidInitialized)
+            return;
+        uuidInitialized = true;
+        if(Objects.equals(PhantomailboxDeliveryUUID, DEFAULT_UUID))
+        PhantomailboxDeliveryUUID = UUID.randomUUID().toString();
+    }
+
+    public void unregisterUUID()
+    {
+        if(PhantomailboxDeliveryUUID != DEFAULT_UUID)
+        {
+            PhantomailboxRegistrySavedData prsd = PhantomailboxRegistrySavedData.fromMailbox(this);
+            prsd.unregisterUUID(this);
+        }
+    }
+
     //every tick, each phantomailbox attempts to invite a courier if necessary
     public static <T extends BlockEntity> void tick(Level level, BlockPos blockPos, BlockState blockState, T t)
     {
-        //figure out which mailbox it is
-        if(level.getBlockEntity(blockPos) instanceof PhantomailboxBlockEntity phantomailboxBlockEntity)
+        if(level.isClientSide() == false)
         {
-            //TODO - update this when multiple courier types are implemented
-            if(canReasonablyInviteCourier(level, phantomailboxBlockEntity) && shouldReasonablyInviteCourier(phantomailboxBlockEntity))
+            //figure out which mailbox it is
+            if (level.getBlockEntity(blockPos) instanceof PhantomailboxBlockEntity phantomailboxBlockEntity)
             {
-                inviteCourier(level, phantomailboxBlockEntity);
+                //if the mailbox is ticking for the first time, assign it a new uuid (or load its saved uuid)
+                phantomailboxBlockEntity.initializeUUID();
+                if(phantomailboxBlockEntity.hasInitializedSavedData == false)
+                {
+                    phantomailboxBlockEntity.hasInitializedSavedData = true;
+                    PhantomailboxRegistrySavedData prsd = PhantomailboxRegistrySavedData.fromMailbox(phantomailboxBlockEntity);
+                    prsd.registerUUID(phantomailboxBlockEntity);
+                }
+
+                //TODO - update this when multiple courier types are implemented
+                if (canReasonablyInviteCourier(level, phantomailboxBlockEntity) && shouldReasonablyInviteCourier(phantomailboxBlockEntity))
+                {
+                    inviteCourier(level, phantomailboxBlockEntity);
+                }
             }
         }
     }
