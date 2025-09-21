@@ -1,0 +1,99 @@
+Better data serialization for registering mailboxes
+-> ideally this will allow for the serialization of their uuid, name, dimension, location, etc in one entry
+
+Hopper handling
+-> received mail can be hoppered out from the bottom
+-> automatically inserting stamps to stamp slot requires that the stamp is addressed
+-> automatically inserting unaddressed stamps defaults to outgoing slot
+-> automatically inserting anything else goes to the outgoing slot
+-> crafting recipe for stamp address duplication at the Crafter block
+
+Redstone handling
+-> checkbox on the mailbox gui: send pulse when mail sent
+-> checkbox on the mailbox gui: send pulse when mail received
+
+Renaming the mailbox
+-> requires text editing field on the mailbox gui
+-> rename_mailbox packet
+-> renaming a mailbox should update the display name in the mailbox list for any player who has the list open
+
+Stamp GUI
+-> display gui when receiving packet
+-> pagination and display of registered mailboxes
+-> mailboxes filtered by dimension
+-> selection visibly highlights a choice
+-> confirming choice saves or overwrites stamp nbt data
+-> filter list of mailboxes with text input field and search button
+-> clear button to reset to blank stamp
+
+Stamp polish
+-> change default item texture to be blank stamp
+-> item texture adds green lines when stamp is addressed
+-> custom tooltip displaying chosen address and/or instructions
+
+Mailbox polish
+-> animation for opening mailbox / door hinge
+-> flapping wings animation that plays when mail is received
+-> particle effects when active
+-> daylight sensor texture should change depending on day/night cycle
+-> sound effects for open/close
+-> sound effects for send/receive
+-> immediately prompt to rename the mailbox when placing it
+-> mailbox eyes should glow in the dark
+
+Phantom Courier
+-> mob spawning
+-> mob pathing from sky to mailbox
+-> mail delivery event when courier arrives successfully
+-> mail placed into pending delivery state / server storage when courier despawns (after flying back up into the sky)
+-> handling situations where the courier must path to the mailbox instead of descending directly downward
+-> handle scenario where the mailbox is destroyed with the courier enroute
+-> handle scenario where mailbox contents are stolen with the courier enroute
+-> animations
+-> particles
+-> sound effects
+-> display or hide parcel undercarriage depending on whether or not the courier has cargo
+-> automatic despawn if pathing fails
+-> handle situation where courier gets stuck in a boat, minecart, etc
+-> gracefully handle situation involving couriers and leads
+-> gracefully handle (ignore) nether portals and end portals
+-> couriers that die should drop their mail (and the stamp) and unregister the package
+-> determine whether or not inclimate weather should have an impact on deliveries
+-> gracefully despawn if dawn arrives while the courier is active
+-> gracefully handle courier struck by lightning
+-> handle courier repelled by cats
+
+Overnight Delivery
+-> tick the send-and-receive funcs on valid / loaded mailboxes if all players on a server sleep
+
+Pending Mail storage / serialization / etc
+
+Consuming the stamp when mail is sent
+
+Return to Sender
+-> Handle situation where unsent outgoing stamp is addressed to invalid mailbox by immediately returning to sender
+-> Handle situation where pending mail is returned to sender due to destroyed mailbox, etc
+-> Handle situation where mail is sent to yourself gracefully
+-> Handle lost-and-found situation where mail cannot be received or returned
+
+Implementation of some item used to make stamps other than nametags
+
+Returning mail that can't be delivered due to destroyed recipient mailbox
+
+Handling for situations where sender mailbox and receiver mailbox are both destroyed and mail cannot be delivered
+
+Separate postage for deliveries to the Nether
+
+Separate postage for deliveries to the End
+
+Separate courier for the Nether
+
+Separate courier for the end
+
+Detect other installed mods (if Ars Nouveau is installed, occasionally spawn Starbuncle courier, etc)
+
+Occasionally deliver spam mail to a loaded mailbox
+-> configurable spam
+-> choose items by tag
+
+Learn the mixins system and evaluate use cases for this mod
