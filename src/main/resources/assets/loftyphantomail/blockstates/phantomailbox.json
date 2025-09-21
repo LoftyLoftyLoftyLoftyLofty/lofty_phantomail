@@ -1,10 +1,19 @@
 {
   "variants" : {
-    "" : {
+    "facing=north" : {
       "model" : "loftyphantomail:block/phantomailbox"
     },
-    "open" : {
-      "model" : "loftyphantomail:block/phantomailboxopen"
+    "facing=south" : {
+      "model" : "loftyphantomail:block/phantomailbox",
+      "y" : 180
+    },
+    "facing=east" : {
+      "model" : "loftyphantomail:block/phantomailbox",
+      "y" : 90
+    },
+    "facing=west" : {
+      "model" : "loftyphantomail:block/phantomailbox",
+      "y" : 270
     }
   }
 }
