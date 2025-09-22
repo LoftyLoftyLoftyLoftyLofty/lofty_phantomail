@@ -65,8 +65,13 @@ public class PhantomailboxBlock extends BaseEntityBlock {
         {
             if(level.getBlockEntity(pos) instanceof PhantomailboxBlockEntity phantomailboxBlockEntity)
             {
+                //drop anything in the blockentity's inventory
                 phantomailboxBlockEntity.drops();
+
+                //unregister the uuid from the list of mailboxes
                 phantomailboxBlockEntity.unregisterUUID();
+
+                //i think this is for redstone but not sure
                 level.updateNeighbourForOutputSignal(pos, this);
             }
         }

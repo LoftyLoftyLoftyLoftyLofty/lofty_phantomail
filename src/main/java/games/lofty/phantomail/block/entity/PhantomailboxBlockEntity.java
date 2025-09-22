@@ -240,7 +240,7 @@ public class PhantomailboxBlockEntity extends BlockEntity implements MenuProvide
             return;
         uuidInitialized = true;
         if(Objects.equals(PhantomailboxDeliveryUUID, DEFAULT_UUID))
-        PhantomailboxDeliveryUUID = UUID.randomUUID().toString();
+            PhantomailboxDeliveryUUID = UUID.randomUUID().toString();
     }
 
     public void unregisterUUID()
@@ -272,7 +272,29 @@ public class PhantomailboxBlockEntity extends BlockEntity implements MenuProvide
                 //TODO - update this when multiple courier types are implemented
                 if (canReasonablyInviteCourier(level, phantomailboxBlockEntity) && shouldReasonablyInviteCourier(phantomailboxBlockEntity))
                 {
-                    inviteCourier(level, phantomailboxBlockEntity);
+                    if( phantomailboxBlockEntity.courierEnRoute == false )
+                    {
+                        inviteCourier(level, phantomailboxBlockEntity);
+                        PhantomailboxRegistrySavedData prsd = PhantomailboxRegistrySavedData.fromMailbox(phantomailboxBlockEntity);
+                        phantomailboxBlockEntity.inventory.setStackInSlot(SLOT_STAMP, ItemStack.EMPTY);//working
+                        //TODO slot multiplexing
+                        //TODO update delivery description entry
+                        prsd.DELIVERY_QUEUE_ITEM_SLOT_0 = phantomailboxBlockEntity.inventory.getStackInSlot(PhantomailboxBlockEntity.SLOT_OUTGOING);
+                        phantomailboxBlockEntity.inventory.setStackInSlot(SLOT_OUTGOING, ItemStack.EMPTY);//working
+                        prsd.setDirty();
+                    }
+                    //THIS LOGIC IS CURRENTLY UNREACHABLE and needs to be handled when a courier arrives at a mailbox (but it works)
+                    else
+                    {
+                        PhantomailboxRegistrySavedData prsd = PhantomailboxRegistrySavedData.fromMailbox(phantomailboxBlockEntity);
+                        if(!prsd.DELIVERY_QUEUE_ITEM_SLOT_0.isEmpty())
+                        {
+                            phantomailboxBlockEntity.inventory.setStackInSlot(SLOT_INCOMING_0, prsd.DELIVERY_QUEUE_ITEM_SLOT_0);
+                            prsd.DELIVERY_QUEUE_ITEM_SLOT_0 = ItemStack.EMPTY;
+                            //TODO update delivery description entry
+                            prsd.setDirty();
+                        }
+                    }
                 }
             }
         }
