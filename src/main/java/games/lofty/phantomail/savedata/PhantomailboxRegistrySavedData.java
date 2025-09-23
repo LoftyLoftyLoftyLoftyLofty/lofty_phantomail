@@ -16,13 +16,62 @@ import java.util.Objects;
 public class PhantomailboxRegistrySavedData extends SavedData
 {
     public static final String LIST_OF_ALL_PHANTOMAILBOX_UUIDS = Phantomail.MOD_ID + ":" + "list_of_all_phantomailbox_uuids";
-    public String listOfAllPhantomailboxUUIDs = "";
+    public String listOfAllPhantomailboxUUIDs = "";//strided, uuid|dimension|name
+
+    public static final String UNIT_SEPARATOR = "␟";
+    public static final String RECORD_SEPARATOR = "␞";
+    public static final String DELIVERY_DETAILS_DEFAULT_DATA = "-" + UNIT_SEPARATOR + "-" + UNIT_SEPARATOR + "-";
 
     //this is a very bad way to implement this, but I can understand it and implement it with my limited knowledge of the api
     public static final String DELIVERY_KEY_SLOT_0_DETAILS = Phantomail.MOD_ID + ":" + "deliverydetails_slot_0";
     public static final String DELIVERY_KEY_SLOT_0_ITEM = Phantomail.MOD_ID + ":" + "deliveryitem_slot_0";
     public ItemStack DELIVERY_QUEUE_ITEM_SLOT_0 = ItemStack.EMPTY;
-    public String DELIVERY_DETAILS_ITEM_SLOT_0 = "-|-|-";
+    public String DELIVERY_DETAILS_ITEM_SLOT_0 = DELIVERY_DETAILS_DEFAULT_DATA;
+
+    public static final String DELIVERY_KEY_SLOT_1_DETAILS = Phantomail.MOD_ID + ":" + "deliverydetails_slot_1";
+    public static final String DELIVERY_KEY_SLOT_1_ITEM = Phantomail.MOD_ID + ":" + "deliveryitem_slot_1";
+    public ItemStack DELIVERY_QUEUE_ITEM_SLOT_1 = ItemStack.EMPTY;
+    public String DELIVERY_DETAILS_ITEM_SLOT_1 = DELIVERY_DETAILS_DEFAULT_DATA;
+
+    public static final String DELIVERY_KEY_SLOT_2_DETAILS = Phantomail.MOD_ID + ":" + "deliverydetails_slot_2";
+    public static final String DELIVERY_KEY_SLOT_2_ITEM = Phantomail.MOD_ID + ":" + "deliveryitem_slot_2";
+    public ItemStack DELIVERY_QUEUE_ITEM_SLOT_2 = ItemStack.EMPTY;
+    public String DELIVERY_DETAILS_ITEM_SLOT_2 = DELIVERY_DETAILS_DEFAULT_DATA;
+
+    public static final String DELIVERY_KEY_SLOT_3_DETAILS = Phantomail.MOD_ID + ":" + "deliverydetails_slot_3";
+    public static final String DELIVERY_KEY_SLOT_3_ITEM = Phantomail.MOD_ID + ":" + "deliveryitem_slot_3";
+    public ItemStack DELIVERY_QUEUE_ITEM_SLOT_3 = ItemStack.EMPTY;
+    public String DELIVERY_DETAILS_ITEM_SLOT_3 = DELIVERY_DETAILS_DEFAULT_DATA;
+
+    public static final String DELIVERY_KEY_SLOT_4_DETAILS = Phantomail.MOD_ID + ":" + "deliverydetails_slot_4";
+    public static final String DELIVERY_KEY_SLOT_4_ITEM = Phantomail.MOD_ID + ":" + "deliveryitem_slot_4";
+    public ItemStack DELIVERY_QUEUE_ITEM_SLOT_4 = ItemStack.EMPTY;
+    public String DELIVERY_DETAILS_ITEM_SLOT_4 = DELIVERY_DETAILS_DEFAULT_DATA;
+
+    public static final String DELIVERY_KEY_SLOT_5_DETAILS = Phantomail.MOD_ID + ":" + "deliverydetails_slot_5";
+    public static final String DELIVERY_KEY_SLOT_5_ITEM = Phantomail.MOD_ID + ":" + "deliveryitem_slot_5";
+    public ItemStack DELIVERY_QUEUE_ITEM_SLOT_5 = ItemStack.EMPTY;
+    public String DELIVERY_DETAILS_ITEM_SLOT_5 = DELIVERY_DETAILS_DEFAULT_DATA;
+
+    public static final String DELIVERY_KEY_SLOT_6_DETAILS = Phantomail.MOD_ID + ":" + "deliverydetails_slot_6";
+    public static final String DELIVERY_KEY_SLOT_6_ITEM = Phantomail.MOD_ID + ":" + "deliveryitem_slot_6";
+    public ItemStack DELIVERY_QUEUE_ITEM_SLOT_6 = ItemStack.EMPTY;
+    public String DELIVERY_DETAILS_ITEM_SLOT_6 = DELIVERY_DETAILS_DEFAULT_DATA;
+
+    public static final String DELIVERY_KEY_SLOT_7_DETAILS = Phantomail.MOD_ID + ":" + "deliverydetails_slot_7";
+    public static final String DELIVERY_KEY_SLOT_7_ITEM = Phantomail.MOD_ID + ":" + "deliveryitem_slot_7";
+    public ItemStack DELIVERY_QUEUE_ITEM_SLOT_7 = ItemStack.EMPTY;
+    public String DELIVERY_DETAILS_ITEM_SLOT_7 = DELIVERY_DETAILS_DEFAULT_DATA;
+
+    public static final String DELIVERY_KEY_SLOT_8_DETAILS = Phantomail.MOD_ID + ":" + "deliverydetails_slot_8";
+    public static final String DELIVERY_KEY_SLOT_8_ITEM = Phantomail.MOD_ID + ":" + "deliveryitem_slot_8";
+    public ItemStack DELIVERY_QUEUE_ITEM_SLOT_8 = ItemStack.EMPTY;
+    public String DELIVERY_DETAILS_ITEM_SLOT_8 = DELIVERY_DETAILS_DEFAULT_DATA;
+
+    public static final String DELIVERY_KEY_SLOT_9_DETAILS = Phantomail.MOD_ID + ":" + "deliverydetails_slot_9";
+    public static final String DELIVERY_KEY_SLOT_9_ITEM = Phantomail.MOD_ID + ":" + "deliveryitem_slot_9";
+    public ItemStack DELIVERY_QUEUE_ITEM_SLOT_9 = ItemStack.EMPTY;
+    public String DELIVERY_DETAILS_ITEM_SLOT_9 = DELIVERY_DETAILS_DEFAULT_DATA;
 
     // Create new instance of saved data
     public static PhantomailboxRegistrySavedData create()
@@ -40,6 +89,33 @@ public class PhantomailboxRegistrySavedData extends SavedData
         //load each pending item slot one by one
         data.DELIVERY_QUEUE_ITEM_SLOT_0 = ItemStack.parseOptional(lookupProvider, tag.getCompound(DELIVERY_KEY_SLOT_0_ITEM));
         data.DELIVERY_DETAILS_ITEM_SLOT_0 = tag.getString(DELIVERY_KEY_SLOT_0_DETAILS);
+
+        data.DELIVERY_QUEUE_ITEM_SLOT_1 = ItemStack.parseOptional(lookupProvider, tag.getCompound(DELIVERY_KEY_SLOT_1_ITEM));
+        data.DELIVERY_DETAILS_ITEM_SLOT_1 = tag.getString(DELIVERY_KEY_SLOT_1_DETAILS);
+
+        data.DELIVERY_QUEUE_ITEM_SLOT_2 = ItemStack.parseOptional(lookupProvider, tag.getCompound(DELIVERY_KEY_SLOT_2_ITEM));
+        data.DELIVERY_DETAILS_ITEM_SLOT_2 = tag.getString(DELIVERY_KEY_SLOT_2_DETAILS);
+
+        data.DELIVERY_QUEUE_ITEM_SLOT_3 = ItemStack.parseOptional(lookupProvider, tag.getCompound(DELIVERY_KEY_SLOT_3_ITEM));
+        data.DELIVERY_DETAILS_ITEM_SLOT_3 = tag.getString(DELIVERY_KEY_SLOT_3_DETAILS);
+
+        data.DELIVERY_QUEUE_ITEM_SLOT_4 = ItemStack.parseOptional(lookupProvider, tag.getCompound(DELIVERY_KEY_SLOT_4_ITEM));
+        data.DELIVERY_DETAILS_ITEM_SLOT_4 = tag.getString(DELIVERY_KEY_SLOT_4_DETAILS);
+
+        data.DELIVERY_QUEUE_ITEM_SLOT_5 = ItemStack.parseOptional(lookupProvider, tag.getCompound(DELIVERY_KEY_SLOT_5_ITEM));
+        data.DELIVERY_DETAILS_ITEM_SLOT_5 = tag.getString(DELIVERY_KEY_SLOT_5_DETAILS);
+
+        data.DELIVERY_QUEUE_ITEM_SLOT_6 = ItemStack.parseOptional(lookupProvider, tag.getCompound(DELIVERY_KEY_SLOT_6_ITEM));
+        data.DELIVERY_DETAILS_ITEM_SLOT_6 = tag.getString(DELIVERY_KEY_SLOT_6_DETAILS);
+
+        data.DELIVERY_QUEUE_ITEM_SLOT_7 = ItemStack.parseOptional(lookupProvider, tag.getCompound(DELIVERY_KEY_SLOT_7_ITEM));
+        data.DELIVERY_DETAILS_ITEM_SLOT_7 = tag.getString(DELIVERY_KEY_SLOT_7_DETAILS);
+
+        data.DELIVERY_QUEUE_ITEM_SLOT_8 = ItemStack.parseOptional(lookupProvider, tag.getCompound(DELIVERY_KEY_SLOT_8_ITEM));
+        data.DELIVERY_DETAILS_ITEM_SLOT_8 = tag.getString(DELIVERY_KEY_SLOT_8_DETAILS);
+
+        data.DELIVERY_QUEUE_ITEM_SLOT_9 = ItemStack.parseOptional(lookupProvider, tag.getCompound(DELIVERY_KEY_SLOT_9_ITEM));
+        data.DELIVERY_DETAILS_ITEM_SLOT_9 = tag.getString(DELIVERY_KEY_SLOT_9_DETAILS);
 
         return data;
     }
@@ -60,28 +136,128 @@ public class PhantomailboxRegistrySavedData extends SavedData
         tag.put(DELIVERY_KEY_SLOT_0_ITEM, DELIVERY_QUEUE_ITEM_SLOT_0.saveOptional(registries));
         tag.putString(DELIVERY_KEY_SLOT_0_DETAILS, DELIVERY_DETAILS_ITEM_SLOT_0);
 
+        tag.put(DELIVERY_KEY_SLOT_1_ITEM, DELIVERY_QUEUE_ITEM_SLOT_1.saveOptional(registries));
+        tag.putString(DELIVERY_KEY_SLOT_1_DETAILS, DELIVERY_DETAILS_ITEM_SLOT_1);
+
+        tag.put(DELIVERY_KEY_SLOT_2_ITEM, DELIVERY_QUEUE_ITEM_SLOT_2.saveOptional(registries));
+        tag.putString(DELIVERY_KEY_SLOT_2_DETAILS, DELIVERY_DETAILS_ITEM_SLOT_2);
+
+        tag.put(DELIVERY_KEY_SLOT_3_ITEM, DELIVERY_QUEUE_ITEM_SLOT_3.saveOptional(registries));
+        tag.putString(DELIVERY_KEY_SLOT_3_DETAILS, DELIVERY_DETAILS_ITEM_SLOT_3);
+
+        tag.put(DELIVERY_KEY_SLOT_4_ITEM, DELIVERY_QUEUE_ITEM_SLOT_4.saveOptional(registries));
+        tag.putString(DELIVERY_KEY_SLOT_4_DETAILS, DELIVERY_DETAILS_ITEM_SLOT_4);
+
+        tag.put(DELIVERY_KEY_SLOT_5_ITEM, DELIVERY_QUEUE_ITEM_SLOT_5.saveOptional(registries));
+        tag.putString(DELIVERY_KEY_SLOT_5_DETAILS, DELIVERY_DETAILS_ITEM_SLOT_5);
+
+        tag.put(DELIVERY_KEY_SLOT_6_ITEM, DELIVERY_QUEUE_ITEM_SLOT_6.saveOptional(registries));
+        tag.putString(DELIVERY_KEY_SLOT_6_DETAILS, DELIVERY_DETAILS_ITEM_SLOT_6);
+
+        tag.put(DELIVERY_KEY_SLOT_7_ITEM, DELIVERY_QUEUE_ITEM_SLOT_7.saveOptional(registries));
+        tag.putString(DELIVERY_KEY_SLOT_7_DETAILS, DELIVERY_DETAILS_ITEM_SLOT_7);
+
+        tag.put(DELIVERY_KEY_SLOT_8_ITEM, DELIVERY_QUEUE_ITEM_SLOT_8.saveOptional(registries));
+        tag.putString(DELIVERY_KEY_SLOT_8_DETAILS, DELIVERY_DETAILS_ITEM_SLOT_8);
+
+        tag.put(DELIVERY_KEY_SLOT_9_ITEM, DELIVERY_QUEUE_ITEM_SLOT_9.saveOptional(registries));
+        tag.putString(DELIVERY_KEY_SLOT_9_DETAILS, DELIVERY_DETAILS_ITEM_SLOT_9);
+
         return tag;
     }
 
-    //TODO - improve this later
-    private String mergeUUID(String uuid, String bigFancyList)
+    public static final int RECORD_INDEX_UUID = 0;
+    public static final int RECORD_INDEX_DIMENSION = 1;
+    public static final int RECORD_INDEX_NAME = 2;
+
+    public static final int NO_SLOTS_AVAILABLE = -1;
+    public int getNextAvailableSlot()
     {
-        ArrayList<String> uuids = new ArrayList<>(Arrays.asList(bigFancyList.split("\\|")));
+        //TODO - this is a terrible way to do this, fix me
+        if(Objects.equals(DELIVERY_DETAILS_ITEM_SLOT_0, DELIVERY_DETAILS_DEFAULT_DATA))
+            return 0;
+
+        if(Objects.equals(DELIVERY_DETAILS_ITEM_SLOT_1, DELIVERY_DETAILS_DEFAULT_DATA))
+            return 1;
+
+        if(Objects.equals(DELIVERY_DETAILS_ITEM_SLOT_2, DELIVERY_DETAILS_DEFAULT_DATA))
+            return 2;
+
+        if(Objects.equals(DELIVERY_DETAILS_ITEM_SLOT_3, DELIVERY_DETAILS_DEFAULT_DATA))
+            return 3;
+
+        if(Objects.equals(DELIVERY_DETAILS_ITEM_SLOT_4, DELIVERY_DETAILS_DEFAULT_DATA))
+            return 4;
+
+        if(Objects.equals(DELIVERY_DETAILS_ITEM_SLOT_5, DELIVERY_DETAILS_DEFAULT_DATA))
+            return 5;
+
+        if(Objects.equals(DELIVERY_DETAILS_ITEM_SLOT_6, DELIVERY_DETAILS_DEFAULT_DATA))
+            return 6;
+
+        if(Objects.equals(DELIVERY_DETAILS_ITEM_SLOT_7, DELIVERY_DETAILS_DEFAULT_DATA))
+            return 7;
+
+        if(Objects.equals(DELIVERY_DETAILS_ITEM_SLOT_8, DELIVERY_DETAILS_DEFAULT_DATA))
+            return 8;
+
+        if(Objects.equals(DELIVERY_DETAILS_ITEM_SLOT_9, DELIVERY_DETAILS_DEFAULT_DATA))
+            return 9;
+
+        return NO_SLOTS_AVAILABLE;
+    }
+
+    public static final int DELIVERY_STATE_UNKNOWN = -1;
+    public static final int DELIVERY_STATE_COURIER_PICKING_UP = 0;
+    public static final int DELIVERY_STATE_PENDING_MAIL = 1;
+    public static final int DELIVERY_STATE_COURIER_DROPPING_OFF = 2;
+
+    public void updateDeliveryDetails(int slot, String senderUUID, String deliveryUUID, int status)
+    {
+        String payload = senderUUID + UNIT_SEPARATOR + deliveryUUID + UNIT_SEPARATOR + String.valueOf(status);
+        //TODO - this is a very embarrassing implementation and should be corrected
+        if(slot == 0)
+            DELIVERY_DETAILS_ITEM_SLOT_0 = payload;
+        else if(slot == 1)
+            DELIVERY_DETAILS_ITEM_SLOT_1 = payload;
+        else if(slot == 2)
+            DELIVERY_DETAILS_ITEM_SLOT_2 = payload;
+        else if(slot == 3)
+            DELIVERY_DETAILS_ITEM_SLOT_3 = payload;
+        else if(slot == 4)
+            DELIVERY_DETAILS_ITEM_SLOT_4 = payload;
+        else if(slot == 5)
+            DELIVERY_DETAILS_ITEM_SLOT_5 = payload;
+        else if(slot == 6)
+            DELIVERY_DETAILS_ITEM_SLOT_6 = payload;
+        else if(slot == 7)
+            DELIVERY_DETAILS_ITEM_SLOT_7 = payload;
+        else if(slot == 8)
+            DELIVERY_DETAILS_ITEM_SLOT_8 = payload;
+        else if(slot == 9)
+            DELIVERY_DETAILS_ITEM_SLOT_9 = payload;
+    }
+
+    //TODO - improve this later
+    private String mergeUUID(String uuid, String dimension, String name, String bigFancyList)
+    {
+        ArrayList<String> uuids = new ArrayList<>(Arrays.asList(bigFancyList.split("\\" + RECORD_SEPARATOR)));
         boolean found = false;
         int x;
         int n = uuids.toArray().length;
         for(x=0; x<n; ++x)
         {
-            if(Objects.equals(uuids.get(x), uuid))
+            ArrayList<String> entry = new ArrayList<>(Arrays.asList(uuids.get(x).split("\\" + UNIT_SEPARATOR)));
+            if(Objects.equals(entry.get(RECORD_INDEX_UUID), uuid))
             {
                 found = true;
                 break;
             }
         }
         if(!found)
-            uuids.add(uuid);
-        String result = String.join("|", uuids);
-        if(Objects.equals(result.substring(0,1),"|"))
+            uuids.add(uuid + UNIT_SEPARATOR + dimension + UNIT_SEPARATOR + name);
+        String result = String.join(RECORD_SEPARATOR, uuids);
+        if(Objects.equals(result.substring(0,1),RECORD_SEPARATOR))
         {
             if (result.length() > 1)
             {
@@ -93,35 +269,38 @@ public class PhantomailboxRegistrySavedData extends SavedData
 
     private String unmergeUUID(String uuid, String bigFancyList)
     {
-        ArrayList<String> uuids = new ArrayList<>(Arrays.asList(bigFancyList.split("\\|")));
+        ArrayList<String> uuids = new ArrayList<>(Arrays.asList(bigFancyList.split("\\" + RECORD_SEPARATOR)));
         ArrayList<String> unmerged = new ArrayList<>();
         boolean found = false;
         int x;
         int n = uuids.toArray().length;
         for(x=0; x<n; ++x)
         {
-            String entry = uuids.get(x);
-            System.out.println("->" + entry);
-            if(Objects.equals(entry, uuid))
+            String entryString = uuids.get(x);
+            ArrayList<String> entrySplit = new ArrayList<>(Arrays.asList(entryString.split("\\" + UNIT_SEPARATOR)));
+            String entryUUID = entrySplit.get(0);
+            if(Objects.equals(entryUUID, uuid))
             {
-                System.out.println("X");
                 continue;
             }
             else 
             {
-                System.out.println("O");
-                unmerged.add(entry);
+                unmerged.add(entryString);
             }
         }
-        String result = String.join("|", unmerged);
-        if(Objects.equals(result.substring(0,1),"|"))
+        String result = String.join(RECORD_SEPARATOR, unmerged);
+        if(result.length() > 0)
         {
-            if (result.length() > 1)
+            if (Objects.equals(result.substring(0, 1), RECORD_SEPARATOR))
             {
-                result = result.substring(1);
+                if (result.length() > 1)
+                {
+                    result = result.substring(1);
+                }
             }
+            return result;
         }
-        return result;
+        else return RECORD_SEPARATOR;
     }
 
     public void unregisterUUID(PhantomailboxBlockEntity be)
@@ -132,7 +311,7 @@ public class PhantomailboxRegistrySavedData extends SavedData
 
     public void registerUUID(PhantomailboxBlockEntity be)
     {
-        listOfAllPhantomailboxUUIDs = mergeUUID(be.PhantomailboxDeliveryUUID, listOfAllPhantomailboxUUIDs);
+        listOfAllPhantomailboxUUIDs = mergeUUID(be.PhantomailboxDeliveryUUID, be.getLevel().dimension().location().toString(), be.PhantomailboxDisplayAddress, listOfAllPhantomailboxUUIDs);
         this.setDirty();
     }
 }
