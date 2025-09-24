@@ -44,7 +44,7 @@ Mailbox polish
 Phantom Courier
 -> mob spawning
 -> mob pathing from sky to mailbox
--> mail delivery event when courier arrives successfully
+-> mail delivery when courier arrives successfully
 -> mail placed into pending delivery state / server storage when courier despawns (after flying back up into the sky)
 -> handling situations where the courier must path to the mailbox instead of descending directly downward
 -> handle scenario where the mailbox is destroyed with the courier enroute
@@ -62,6 +62,7 @@ Phantom Courier
 -> gracefully despawn if dawn arrives while the courier is active
 -> gracefully handle courier struck by lightning
 -> handle courier repelled by cats
+-> gracefully handle finding an appropriate mailbox when spawned via egg
 
 Overnight Delivery
 -> tick the send-and-receive funcs on valid / loaded mailboxes if all players on a server sleep
