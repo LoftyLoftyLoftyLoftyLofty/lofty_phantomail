@@ -55,7 +55,7 @@ public class PhantomailCourierEntity extends FlyingMob
         this.setPathfindingMalus(PathType.UNPASSABLE_RAIL, 0.0F);
         this.setPathfindingMalus(PathType.POWDER_SNOW, 0.0F);
         this.setPathfindingMalus(PathType.WATER_BORDER, 0.0F);
-
+        
         //set xp for murdering the courier
         this.xpReward = 5;
 

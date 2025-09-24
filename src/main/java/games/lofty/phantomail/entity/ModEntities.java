@@ -16,7 +16,7 @@ public class ModEntities
             DeferredRegister.create(BuiltInRegistries.ENTITY_TYPE, Phantomail.MOD_ID);
 
     public static final Supplier<EntityType<PhantomailCourierEntity>> PHANTOMAIL_COURIER =
-            ENTITY_TYPES.register("phantomailcourier", () -> EntityType.Builder.of(PhantomailCourierEntity::new, MobCategory.MISC).build("phantomailcourier"));
+            ENTITY_TYPES.register("phantomailcourier", () -> EntityType.Builder.of(PhantomailCourierEntity::new, MobCategory.MISC).sized(0.875F,0.5F).build("phantomailcourier"));
 
     public static void register(IEventBus eventBus)
     {
