@@ -2,11 +2,14 @@ package games.lofty.phantomail;
 
 import games.lofty.phantomail.block.ModBlocks;
 import games.lofty.phantomail.block.entity.ModBlockEntities;
+import games.lofty.phantomail.entity.ModEntities;
+import games.lofty.phantomail.entity.client.PhantomailCourierRenderer;
 import games.lofty.phantomail.item.ModCreativeModeTabs;
 import games.lofty.phantomail.item.ModItems;
 import games.lofty.phantomail.record.ModPayloads;
 import games.lofty.phantomail.screen.ModMenuTypes;
 import games.lofty.phantomail.screen.custom.PhantomailboxScreen;
+import net.minecraft.client.renderer.entity.EntityRenderers;
 import net.neoforged.neoforge.client.event.RegisterMenuScreensEvent;
 import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
 import org.slf4j.Logger;
@@ -57,6 +60,9 @@ public class Phantomail {
         //hook up block entities
         ModBlockEntities.register(modEventBus);
 
+        //couriers
+        ModEntities.register(modEventBus);
+
         //hook up menus and gui stuff
         ModMenuTypes.register(modEventBus);
 
@@ -98,6 +104,7 @@ public class Phantomail {
     public static class ClientModEvents {
         @SubscribeEvent
         public static void onClientSetup(FMLClientSetupEvent event) {
+            EntityRenderers.register(ModEntities.PHANTOMAIL_COURIER.get(), PhantomailCourierRenderer::new);
         }
 
         @SubscribeEvent

@@ -1,5 +1,7 @@
 {
   "item.loftyphantomail.phantomailstamp" : "Phantomail Stamp",
+  "item.loftyphantomail.phantomailcourierspawnegg" : "Phantomail Courier Spawn Egg",
   "block.loftyphantomail.phantomailbox" : "Phantomailbox",
-  "creativetab.loftyphantomail.items" : "Phantomail"
+  "creativetab.loftyphantomail.items" : "Phantomail",
+  "entity.loftyphantomail.phantomailcourier" : "Phantomail Courier"
 }

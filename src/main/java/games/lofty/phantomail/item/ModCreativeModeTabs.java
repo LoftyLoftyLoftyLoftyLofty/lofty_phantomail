@@ -24,6 +24,7 @@ public class ModCreativeModeTabs {
                     .displayItems(((itemDisplayParameters, output) -> {
                         output.accept(ModItems.PHANTOMAIL_STAMP);
                         output.accept(ModBlocks.PHANTOMAILBOX);
+                        output.accept(ModItems.PHANTOMAIL_COURIER_SPAWN_EGG);
                     }))
                     .build());
 
