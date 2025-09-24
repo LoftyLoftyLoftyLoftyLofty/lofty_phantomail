@@ -2,6 +2,7 @@ package games.lofty.phantomail.entity.custom;
 
 import games.lofty.phantomail.block.custom.PhantomailboxBlock;
 import games.lofty.phantomail.block.entity.PhantomailboxBlockEntity;
+import games.lofty.phantomail.savedata.PhantomailboxRegistrySavedData;
 import net.minecraft.core.BlockPos;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
@@ -13,10 +14,12 @@ import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.control.FlyingMoveControl;
 import net.minecraft.world.entity.ai.navigation.FlyingPathNavigation;
 import net.minecraft.world.entity.monster.Phantom;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.pathfinder.PathType;
 
 import java.util.Arrays;
+import java.util.Objects;
 
 public class PhantomailCourierEntity extends FlyingMob
 {
@@ -125,6 +128,37 @@ public class PhantomailCourierEntity extends FlyingMob
         }
     }
 
+    /// the itemstack to be delivered to a mailbox - couriers hold one at a time
+    //TODO - save and load these properties to/from the entity additional data
+    public ItemStack currentlyHeldDeliveryItem = ItemStack.EMPTY;
+    public int currentlyHandlingDeliverySlotIndex = PhantomailboxRegistrySavedData.NO_SLOTS_AVAILABLE;
+    public void populateNextDeliveryItemFromQueue(PhantomailboxBlockEntity phantomailboxBlockEntity)
+    {
+        if(level().isClientSide == false)
+        {
+            //if the mailbox we're targeting has an initialized uuid
+            if (!Objects.equals(phantomailboxBlockEntity.PhantomailboxDeliveryUUID, PhantomailboxBlockEntity.DEFAULT_UUID))
+            {
+                //get the queue
+                PhantomailboxRegistrySavedData prsd = PhantomailboxRegistrySavedData.fromMailbox(phantomailboxBlockEntity);
+
+                //find the first item in queue for this mailbox
+                int slot = prsd.getFirstPendingIndexAddressedToUUID(phantomailboxBlockEntity.PhantomailboxDeliveryUUID);
+                if (slot != PhantomailboxRegistrySavedData.NO_SLOTS_AVAILABLE)
+                {
+                    //TODO - treat this differently if unsafe item transport is disabled
+
+                    //grab the item from the queue
+                    ItemStack pendingItem = prsd.getPendingItemFromSlot(slot);
+                    currentlyHeldDeliveryItem = pendingItem.copy();
+                    pendingItem = ItemStack.EMPTY;
+                    currentlyHandlingDeliverySlotIndex = slot;
+                    prsd.setDirty();
+                }
+            }
+        }
+    }
+
     //TODO - save most of this stuff in saveAdditional, load it in loadAdditional
     //spawn position - presumably this is in the sky
     BlockPos spawnPosition;//TODO implement
@@ -147,8 +181,10 @@ public class PhantomailCourierEntity extends FlyingMob
 
     /// tick at which light level hits 4, during night time in the overworld
     public static final int TIME_DARKEST_NIGHT = 13670;
+
     /// tick at which light level begins to rise, approaching dawn in the overworld
     public static final int TIME_ABANDON_SORTIE = 22331;
+
     /// returns true if a delivery needs to be abandoned because the sun is coming
     public boolean shouldAbandonSortieDueToTimeConstraints()
     {return (level().getDayTime() < TIME_DARKEST_NIGHT) || (level().getDayTime() > TIME_ABANDON_SORTIE);}
@@ -158,180 +194,204 @@ public class PhantomailCourierEntity extends FlyingMob
     {
         super.tick();
 
-        //get the target mailbox blockentity
-        PhantomailboxBlockEntity targetMailbox = null;
-
-        //if the mailbox that spawned us registered its position with us, use that to find it
-        if(lastKnownTargetMailboxPos != null)
+        if(level().isClientSide == false)
         {
-            if (level().getBlockEntity(lastKnownTargetMailboxPos) instanceof PhantomailboxBlockEntity p)
-                targetMailbox = p;
-        }
+            //get the target mailbox blockentity
+            PhantomailboxBlockEntity targetMailbox = null;
 
-        //we expect to be in this state for a single tick
-        if(phantomailCourierCurrentBehaviorState == PHANTOMAIL_COURIER_BEHAVIOR_STATE_INIT)
-        {
-            debugMe("(Init) Initializing...");
-            //if we were spawned without a target mailbox being attached (spawn egg) then make an attempt to find a mailbox
-            if(targetMailbox == null)
+            //if the mailbox that spawned us registered its position with us, use that to find it
+            if (lastKnownTargetMailboxPos != null)
             {
-                debugMe("(Init) No target provided. Searching...");
+                if (level().getBlockEntity(lastKnownTargetMailboxPos) instanceof PhantomailboxBlockEntity p)
+                    targetMailbox = p;
+            }
 
-                //TODO - if we have a saved target UUID, attempt to find that mailbox instead
-                //TODO - expand this to search a 3x3 chunk range
-                //TODO - sort results by distance and choose the closest mailbox
-                var chunk = level().getChunkAt(blockPosition());
-                var relevantEntities = chunk.getBlockEntitiesPos().toArray();
-                debugMe("(Init) BlockEntities in chunk: " + String.valueOf(relevantEntities.length));
-                for (int x = 0; x < relevantEntities.length; ++x)
+            //we expect to be in this state for a single tick
+            if (phantomailCourierCurrentBehaviorState == PHANTOMAIL_COURIER_BEHAVIOR_STATE_INIT)
+            {
+                debugMe("(Init) Initializing...");
+                //if we were spawned without a target mailbox being attached (spawn egg) then make an attempt to find a mailbox
+                if (targetMailbox == null)
                 {
-                    if (chunk.getBlockEntity((BlockPos)relevantEntities[x]) instanceof PhantomailboxBlockEntity phantomailboxBlockEntity)
+                    debugMe("(Init) No target provided. Searching...");
+
+                    //TODO - if we have a saved target UUID, attempt to find that mailbox instead
+                    //TODO - expand this to search a 3x3 chunk range
+                    //TODO - sort results by distance and choose the closest mailbox
+                    var chunk = level().getChunkAt(blockPosition());
+                    var relevantEntities = chunk.getBlockEntitiesPos().toArray();
+                    debugMe("(Init) BlockEntities in chunk: " + String.valueOf(relevantEntities.length));
+                    for (int x = 0; x < relevantEntities.length; ++x)
                     {
-                        debugMe("(Init) Target acquired");
-                        targetMailbox = phantomailboxBlockEntity;
-                        lastKnownTargetMailboxPos = (BlockPos)relevantEntities[x];
-                        break;
+                        if (chunk.getBlockEntity((BlockPos) relevantEntities[x]) instanceof PhantomailboxBlockEntity phantomailboxBlockEntity)
+                        {
+                            debugMe("(Init) Target acquired");
+                            targetMailbox = phantomailboxBlockEntity;
+                            lastKnownTargetMailboxPos = (BlockPos) relevantEntities[x];
+                            break;
+                        }
+                    }
+                }
+
+                //if we don't have a target mailbox, despawn
+                if (targetMailbox == null)
+                {
+                    debugMe("(Init) Couldn't find a mailbox. Despawning...");
+                    phantomailCourierCurrentBehaviorState = PHANTOMAIL_COURIER_BEHAVIOR_STATE_DESPAWN;
+                } else
+                {
+                    debugMe("(Init) Entering arrival state...");
+                    phantomailCourierCurrentBehaviorState = PHANTOMAIL_COURIER_BEHAVIOR_STATE_INGRESS;
+
+                    //if there are any items in the queue that need to be delivered to this particular mailbox, grab the first one
+                    populateNextDeliveryItemFromQueue(targetMailbox);
+                }
+            }
+
+            //if we are arriving, circle around in the sky until we have a valid path to the mailbox
+            else if (phantomailCourierCurrentBehaviorState == PHANTOMAIL_COURIER_BEHAVIOR_STATE_INGRESS)
+            {
+                //if we don't have a target mailbox, abandon sortie
+                if ((targetMailbox == null) || shouldAbandonSortieDueToTimeConstraints())
+                {
+                    debugMe("(Arrival) abandoning sortie");
+                    phantomailCourierCurrentBehaviorState = PHANTOMAIL_COURIER_BEHAVIOR_STATE_EGRESS;
+                } else
+                {
+                    //if we haven't tried to build a path yet, start trying
+                    if (phantomailCourierPathNavigation == null)
+                    {
+                        debugMe("(Arrival) Building path from " + blockPosition().toString() + " to " + targetMailbox.getBlockPos().toString());
+                        phantomailCourierPathNavigation = new FlyingPathNavigation(this, level());
+                        phantomailCourierPathNavigation.setCanOpenDoors(false);
+                        phantomailCourierPathNavigation.setCanFloat(false);
+                        phantomailCourierPathNavigation.setCanPassDoors(true);
+                        phantomailCourierPathNavigation.setMaxVisitedNodesMultiplier(10.0F);
+                        phantomailCourierPathNavigation.moveTo(
+                                (double) targetMailbox.getBlockPos().getX(),
+                                (double) targetMailbox.getBlockPos().getY(),
+                                (double) targetMailbox.getBlockPos().getZ(),
+                                0,
+                                this.getAttributeValue(Attributes.FLYING_SPEED)
+                        );
+                    }
+                    //if we've already started a pathfinding job...
+                    else
+                    {
+                        if (phantomailCourierPathNavigation.isInProgress())
+                        {
+                            //debugMe("(Arrival) Awaiting path result...");
+                            phantomailCourierPathNavigation.tick();
+                        }
+
+                        if (phantomailCourierPathNavigation.isStuck())
+                        {
+                            debugMe("(Arrival) Stuck");
+                        }
+
+                        //...and it's finished
+                        if (phantomailCourierPathNavigation.isDone())
+                        {
+                            debugMe("(Arrival) Done");
+                            //...and it succeeded
+                            if (phantomailCourierPathNavigation.getPath() != null)
+                            {
+                                debugMe("(Arrival) Path not null");
+                                if ((this.blockPosition().distManhattan(lastKnownTargetMailboxPos) <= 2) && (this.isColliding(lastKnownTargetMailboxPos, level().getBlockState(lastKnownTargetMailboxPos))))
+                                {
+                                    debugMe("(Arrival) Path arrived at correct block");
+                                    phantomailCourierCurrentBehaviorState = PHANTOMAIL_COURIER_BEHAVIOR_STATE_INTERACT_MAILBOX;
+                                } else
+                                {
+                                    debugMe("(Arrival) Path arrived at incorrect block");
+                                    if (phantomailCourierPathNavigationRandomized == false)
+                                    {
+                                        //try a randomized position this time - we flip back and forth between choosing random offsets toward the destination and choosing the actual destination
+                                        phantomailCourierPathNavigationRandomized = true;
+
+                                        //calculate a random offset in the general direction of the target
+                                        BlockPos delta = new BlockPos(
+                                                lastKnownTargetMailboxPos.getX() - this.blockPosition().getX(),
+                                                lastKnownTargetMailboxPos.getY() - this.blockPosition().getY(),
+                                                lastKnownTargetMailboxPos.getZ() - this.blockPosition().getZ()
+                                        );
+
+                                        //steadily increase our desperation search radius until we are either successful or need to egress
+                                        pathDesperationRadius += 1.5;
+                                        phantomailCourierPathNavigation.moveTo(
+                                                (double) this.blockPosition().getX() + ((random.nextFloat() * pathDesperationRadius) - (pathDesperationRadius * 0.5)) + delta.getX(),
+                                                (double) this.blockPosition().getY() + ((random.nextFloat() * pathDesperationRadius) - (pathDesperationRadius * 0.5)) + delta.getY(),
+                                                (double) this.blockPosition().getZ() + ((random.nextFloat() * pathDesperationRadius) - (pathDesperationRadius * 0.5)) + delta.getZ(),
+                                                2,
+                                                this.getAttributeValue(Attributes.FLYING_SPEED)
+                                        );
+                                    } else
+                                    {
+                                        phantomailCourierPathNavigation = null;
+                                        phantomailCourierPathNavigationRandomized = false;
+                                    }
+                                }
+                            } else
+                            {
+                                debugMe("(Arrival) Path is null");
+                                //otherwise, abandon sortie
+                                phantomailCourierCurrentBehaviorState = PHANTOMAIL_COURIER_BEHAVIOR_STATE_EGRESS;
+                            }
+                        }
                     }
                 }
             }
 
-            //if we don't have a target mailbox, despawn
-            if (targetMailbox == null)
+            //if we are interacting with the mailbox, do that
+            else if (phantomailCourierCurrentBehaviorState == PHANTOMAIL_COURIER_BEHAVIOR_STATE_INTERACT_MAILBOX)
             {
-                debugMe("(Init) Couldn't find a mailbox. Despawning...");
-                phantomailCourierCurrentBehaviorState = PHANTOMAIL_COURIER_BEHAVIOR_STATE_DESPAWN;
-            }
-            else
-            {
-                debugMe("(Init) Entering arrival state...");
-                phantomailCourierCurrentBehaviorState = PHANTOMAIL_COURIER_BEHAVIOR_STATE_INGRESS;
-            }
-        }
-
-        //if we are arriving, circle around in the sky until we have a valid path to the mailbox
-        else if(phantomailCourierCurrentBehaviorState == PHANTOMAIL_COURIER_BEHAVIOR_STATE_INGRESS)
-        {
-            //if we don't have a target mailbox, abandon sortie
-            if ((targetMailbox == null) || shouldAbandonSortieDueToTimeConstraints())
-            {
-                debugMe("(Arrival) abandoning sortie");
-                phantomailCourierCurrentBehaviorState = PHANTOMAIL_COURIER_BEHAVIOR_STATE_EGRESS;
-            }
-            else
-            {
-                //if we haven't tried to build a path yet, start trying
-                if (phantomailCourierPathNavigation == null)
-                {
-                    debugMe("(Arrival) Building path from " + blockPosition().toString() + " to " + targetMailbox.getBlockPos().toString());
-                    phantomailCourierPathNavigation = new FlyingPathNavigation(this, level());
-                    phantomailCourierPathNavigation.setCanOpenDoors(false);
-                    phantomailCourierPathNavigation.setCanFloat(false);
-                    phantomailCourierPathNavigation.setCanPassDoors(true);
-                    phantomailCourierPathNavigation.setMaxVisitedNodesMultiplier(10.0F);
-                    phantomailCourierPathNavigation.moveTo(
-                            (double)targetMailbox.getBlockPos().getX(),
-                            (double)targetMailbox.getBlockPos().getY(),
-                            (double)targetMailbox.getBlockPos().getZ(),
-                            0,
-                            this.getAttributeValue(Attributes.FLYING_SPEED)
-                    );
-                }
-                //if we've already started a pathfinding job...
+                if ((targetMailbox == null) || shouldAbandonSortieDueToTimeConstraints())
+                    phantomailCourierCurrentBehaviorState = PHANTOMAIL_COURIER_BEHAVIOR_STATE_EGRESS;
                 else
                 {
-                    if( phantomailCourierPathNavigation.isInProgress() )
-                    {
-                        //debugMe("(Arrival) Awaiting path result...");
-                        phantomailCourierPathNavigation.tick();
-                    }
+                    //get our savedata
+                    PhantomailboxRegistrySavedData prsd = PhantomailboxRegistrySavedData.fromMailbox(targetMailbox);
 
-                    if(phantomailCourierPathNavigation.isStuck())
+                    //drop off goods belonging to this mailbox
+                    if (currentlyHeldDeliveryItem.isEmpty() == false)
                     {
-                        debugMe("(Arrival) Stuck");
-                    }
-
-                    //...and it's finished
-                    if( phantomailCourierPathNavigation.isDone() )
-                    {
-                        debugMe("(Arrival) Done");
-                        //...and it succeeded
-                        if(phantomailCourierPathNavigation.getPath() != null)
+                        //is there room in the mailbox?
+                        if(PhantomailboxBlockEntity.getAvailableInboundMailSlots(targetMailbox) > 0)
                         {
-                            debugMe("(Arrival) Path not null");
-                            if((this.blockPosition().distManhattan(lastKnownTargetMailboxPos) <= 2) && (this.isColliding(lastKnownTargetMailboxPos, level().getBlockState(lastKnownTargetMailboxPos))))
-                            {
-                                debugMe("(Arrival) Path arrived at correct block");
-                                phantomailCourierCurrentBehaviorState = PHANTOMAIL_COURIER_BEHAVIOR_STATE_INTERACT_MAILBOX;
-                            }
-                            else
-                            {
-                                debugMe("(Arrival) Path arrived at incorrect block");
-                                if( phantomailCourierPathNavigationRandomized == false )
-                                {
-                                    //try a randomized position this time - we flip back and forth between choosing random offsets toward the destination and choosing the actual destination
-                                    phantomailCourierPathNavigationRandomized = true;
+                            //deliver the item successfully
+                            int insertSlot = PhantomailboxBlockEntity.getNextOpenSlot(targetMailbox);
+                            targetMailbox.inventory.setStackInSlot(insertSlot,currentlyHeldDeliveryItem.copy());
+                            currentlyHeldDeliveryItem = ItemStack.EMPTY;
 
-                                    //calculate a random offset in the general direction of the target
-                                    BlockPos delta = new BlockPos(
-                                            lastKnownTargetMailboxPos.getX() - this.blockPosition().getX(),
-                                            lastKnownTargetMailboxPos.getY() - this.blockPosition().getY(),
-                                            lastKnownTargetMailboxPos.getZ() - this.blockPosition().getZ()
-                                    );
-
-                                    //steadily increase our desperation search radius until we are either successful or need to egress
-                                    pathDesperationRadius += 1.5;
-                                    phantomailCourierPathNavigation.moveTo(
-                                            (double) this.blockPosition().getX() + ((random.nextFloat() * pathDesperationRadius) - (pathDesperationRadius * 0.5)) + delta.getX(),
-                                            (double) this.blockPosition().getY() + ((random.nextFloat() * pathDesperationRadius) - (pathDesperationRadius * 0.5)) + delta.getY(),
-                                            (double) this.blockPosition().getZ() + ((random.nextFloat() * pathDesperationRadius) - (pathDesperationRadius * 0.5)) + delta.getZ(),
-                                            2,
-                                            this.getAttributeValue(Attributes.FLYING_SPEED)
-                                    );
-                                }
-                                else
-                                {
-                                    phantomailCourierPathNavigation = null;
-                                    phantomailCourierPathNavigationRandomized = false;
-                                }
-                            }
-                        }
-                        else
-                        {
-                            debugMe("(Arrival) Path is null");
-                            //otherwise, abandon sortie
-                            phantomailCourierCurrentBehaviorState = PHANTOMAIL_COURIER_BEHAVIOR_STATE_EGRESS;
+                            //clear the delivery queue entry
+                            prsd.deliveredSuccessfully(currentlyHandlingDeliverySlotIndex);
                         }
                     }
+
+                    //pick up goods stored in this mailbox only if we can reserve a delivery queue slot for them
+                    if (prsd.requestPendingMailSlot() != PhantomailboxRegistrySavedData.NO_SLOTS_AVAILABLE)
+                    {
+                        //TODO - item pickup
+                    }
+
+                    //return to the sky
+                    phantomailCourierCurrentBehaviorState = PHANTOMAIL_COURIER_BEHAVIOR_STATE_EGRESS;
                 }
             }
-        }
 
-        //if we are interacting with the mailbox, do that
-        else if(phantomailCourierCurrentBehaviorState == PHANTOMAIL_COURIER_BEHAVIOR_STATE_INTERACT_MAILBOX)
-        {
-            if (targetMailbox == null)
-                phantomailCourierCurrentBehaviorState = PHANTOMAIL_COURIER_BEHAVIOR_STATE_EGRESS;
-            else
+            //if we are exiting, do that
+            else if (phantomailCourierCurrentBehaviorState == PHANTOMAIL_COURIER_BEHAVIOR_STATE_EGRESS)
             {
                 phantomailCourierCurrentBehaviorState = PHANTOMAIL_COURIER_BEHAVIOR_STATE_DESPAWN;
-                //drop off goods belonging to this mailbox
-
-                //pick up goods belonging to this mailbox
             }
-        }
 
-        //if we are exiting, do that
-        else if(phantomailCourierCurrentBehaviorState == PHANTOMAIL_COURIER_BEHAVIOR_STATE_EGRESS)
-        {
-            phantomailCourierCurrentBehaviorState = PHANTOMAIL_COURIER_BEHAVIOR_STATE_DESPAWN;
-        }
-
-        //if we have made it back to the sky, despawn
-        else if(phantomailCourierCurrentBehaviorState == PHANTOMAIL_COURIER_BEHAVIOR_STATE_DESPAWN)
-        {
-            playSound(SoundEvents.FOX_SCREECH);
-            this.remove(RemovalReason.DISCARDED);
-            return;
+            //if we have made it back to the sky, despawn
+            else if (phantomailCourierCurrentBehaviorState == PHANTOMAIL_COURIER_BEHAVIOR_STATE_DESPAWN)
+            {
+                playSound(SoundEvents.FOX_SCREECH);
+                this.remove(RemovalReason.DISCARDED);
+                return;
+            }
         }
     }
 }

@@ -139,21 +139,19 @@ public class PhantomailboxBlockEntity extends BlockEntity implements MenuProvide
             //if it is nighttime
             if(level.isNight())
             {
-                //if the mailbox has sky access
-                //TODO - this isn't a good way to check for a clear flight path for an inbound flying courier
-                if(level.canSeeSky(phantomailboxBlockEntity.getBlockPos()))
-                {
-                    return true;
-                }
+                //verifying whether the mailbox is accessible from the sky will be handled by the courier itself
+                return true;
             }
         }
         return false;
     }
 
+    /// returns true if there is an item in the queue to be delivered to this mailbox
     private static boolean hasPendingMail(PhantomailboxBlockEntity phantomailboxBlockEntity)
     {
-        //TODO - the server needs to be able to store outgoing mail in some kind of buffer and the phantomailbox needs to be able to read that buffer
-        return false;
+        PhantomailboxRegistrySavedData prsd = PhantomailboxRegistrySavedData.fromMailbox(phantomailboxBlockEntity);
+        int slot = prsd.getFirstPendingIndexAddressedToUUID(phantomailboxBlockEntity.PhantomailboxDeliveryUUID);
+        return (slot != PhantomailboxRegistrySavedData.NO_SLOTS_AVAILABLE);
     }
 
     //returns true if all of the environmental, block placement, and inventory conditions necessary to invite a courier have been met
@@ -211,7 +209,7 @@ public class PhantomailboxBlockEntity extends BlockEntity implements MenuProvide
     }
 
     //returns the number of unoccupied/available inbound mail slots
-    private static int getAvailableInboundMailSlots(PhantomailboxBlockEntity phantomailboxBlockEntity)
+    public static int getAvailableInboundMailSlots(PhantomailboxBlockEntity phantomailboxBlockEntity)
     {
         int ret = 0;
         for(int x = PhantomailboxBlockEntity.SLOT_INCOMING_0; x <= PhantomailboxBlockEntity.SLOT_INCOMING_3; ++x)
@@ -224,7 +222,7 @@ public class PhantomailboxBlockEntity extends BlockEntity implements MenuProvide
 
     //returns the next available unoccupied slot
     public static final int NO_SLOTS_AVAILABLE = -1;
-    private static int getNextOpenSlot(PhantomailboxBlockEntity phantomailboxBlockEntity)
+    public static int getNextOpenSlot(PhantomailboxBlockEntity phantomailboxBlockEntity)
     {
         for(int x = PhantomailboxBlockEntity.SLOT_INCOMING_0; x <= PhantomailboxBlockEntity.SLOT_INCOMING_3; ++x)
         {

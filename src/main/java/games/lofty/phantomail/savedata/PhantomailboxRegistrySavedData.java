@@ -20,7 +20,18 @@ public class PhantomailboxRegistrySavedData extends SavedData
 
     public static final String UNIT_SEPARATOR = "␟";
     public static final String RECORD_SEPARATOR = "␞";
+
+    public static final int DELIVERY_STATE_UNKNOWN = -1;
+    public static final int DELIVERY_STATE_COURIER_PICKING_UP = 0;
+    public static final int DELIVERY_STATE_PENDING_MAIL = 1;
+    public static final int DELIVERY_STATE_COURIER_DROPPING_OFF = 2;
+
     public static final String DELIVERY_DETAILS_DEFAULT_DATA = "-" + UNIT_SEPARATOR + "-" + UNIT_SEPARATOR + "-";
+    public static final String DELIVERY_DETAILS_DEFAULT_DATA_RESERVED = "-" + UNIT_SEPARATOR + "-" + UNIT_SEPARATOR + DELIVERY_STATE_COURIER_PICKING_UP;
+
+    public static final int DETAILS_INDEX_UUID_TO = 0;
+    public static final int DETAILS_INDEX_UUID_FROM = 1;
+    public static final int DETAILS_INDEX_STATUS = 2;
 
     //this is a very bad way to implement this, but I can understand it and implement it with my limited knowledge of the api
     public static final String DELIVERY_KEY_SLOT_0_DETAILS = Phantomail.MOD_ID + ":" + "deliverydetails_slot_0";
@@ -207,11 +218,6 @@ public class PhantomailboxRegistrySavedData extends SavedData
         return NO_SLOTS_AVAILABLE;
     }
 
-    public static final int DELIVERY_STATE_UNKNOWN = -1;
-    public static final int DELIVERY_STATE_COURIER_PICKING_UP = 0;
-    public static final int DELIVERY_STATE_PENDING_MAIL = 1;
-    public static final int DELIVERY_STATE_COURIER_DROPPING_OFF = 2;
-
     public void updateDeliveryDetails(int slot, String senderUUID, String deliveryUUID, int status)
     {
         String payload = senderUUID + UNIT_SEPARATOR + deliveryUUID + UNIT_SEPARATOR + String.valueOf(status);
@@ -313,5 +319,136 @@ public class PhantomailboxRegistrySavedData extends SavedData
     {
         listOfAllPhantomailboxUUIDs = mergeUUID(be.PhantomailboxDeliveryUUID, be.getLevel().dimension().location().toString(), be.PhantomailboxDisplayAddress, listOfAllPhantomailboxUUIDs);
         this.setDirty();
+    }
+
+    ///  returns the index of the first piece of mail found in the queue addressed to a particular uuid
+    public int getFirstPendingIndexAddressedToUUID(String uuid)
+    {
+        String[] entries = {
+                DELIVERY_DETAILS_ITEM_SLOT_0,
+                DELIVERY_DETAILS_ITEM_SLOT_1,
+                DELIVERY_DETAILS_ITEM_SLOT_2,
+                DELIVERY_DETAILS_ITEM_SLOT_3,
+                DELIVERY_DETAILS_ITEM_SLOT_4,
+                DELIVERY_DETAILS_ITEM_SLOT_5,
+                DELIVERY_DETAILS_ITEM_SLOT_6,
+                DELIVERY_DETAILS_ITEM_SLOT_7,
+                DELIVERY_DETAILS_ITEM_SLOT_8,
+                DELIVERY_DETAILS_ITEM_SLOT_9
+        };
+
+        int x;
+        int n = entries.length;
+        for(x=0;x<n;++x)
+        {
+            ArrayList<String> details = new ArrayList<>(Arrays.asList(entries[x].split("\\" + UNIT_SEPARATOR)));
+            if (Objects.equals(details.get(DETAILS_INDEX_UUID_TO), uuid))
+            {
+                return x;
+            }
+        }
+        return NO_SLOTS_AVAILABLE;
+    }
+
+    public ItemStack getPendingItemFromSlot(int slot)
+    {
+        if(slot == 0)
+            return DELIVERY_QUEUE_ITEM_SLOT_0;
+        else if(slot == 1)
+            return DELIVERY_QUEUE_ITEM_SLOT_1;
+        else if(slot == 2)
+            return DELIVERY_QUEUE_ITEM_SLOT_2;
+        else if(slot == 3)
+            return DELIVERY_QUEUE_ITEM_SLOT_3;
+        else if(slot == 4)
+            return DELIVERY_QUEUE_ITEM_SLOT_4;
+        else if(slot == 5)
+            return DELIVERY_QUEUE_ITEM_SLOT_5;
+        else if(slot == 6)
+            return DELIVERY_QUEUE_ITEM_SLOT_6;
+        else if(slot == 7)
+            return DELIVERY_QUEUE_ITEM_SLOT_7;
+        else if(slot == 8)
+            return DELIVERY_QUEUE_ITEM_SLOT_8;
+        else if(slot == 9)
+            return DELIVERY_QUEUE_ITEM_SLOT_9;
+        return null;
+    }
+
+    public int requestPendingMailSlot()
+    {
+        String[] details = {
+                DELIVERY_DETAILS_ITEM_SLOT_0,
+                DELIVERY_DETAILS_ITEM_SLOT_1,
+                DELIVERY_DETAILS_ITEM_SLOT_2,
+                DELIVERY_DETAILS_ITEM_SLOT_3,
+                DELIVERY_DETAILS_ITEM_SLOT_4,
+                DELIVERY_DETAILS_ITEM_SLOT_5,
+                DELIVERY_DETAILS_ITEM_SLOT_6,
+                DELIVERY_DETAILS_ITEM_SLOT_7,
+                DELIVERY_DETAILS_ITEM_SLOT_8,
+                DELIVERY_DETAILS_ITEM_SLOT_9
+        };
+        int x;
+        int n = details.length;
+        for(x=0;x<n;++x)
+        {
+            if(Objects.equals(details[x], DELIVERY_DETAILS_DEFAULT_DATA))
+            {
+                reserveSlot(x);
+                return x;
+            }
+        }
+        return NO_SLOTS_AVAILABLE;
+    }
+
+    private void reserveSlot(int index)
+    {
+        if(index == 0)
+            DELIVERY_DETAILS_ITEM_SLOT_0 = DELIVERY_DETAILS_DEFAULT_DATA_RESERVED;
+        else if(index == 1)
+            DELIVERY_DETAILS_ITEM_SLOT_1 = DELIVERY_DETAILS_DEFAULT_DATA_RESERVED;
+        else if(index == 2)
+            DELIVERY_DETAILS_ITEM_SLOT_2 = DELIVERY_DETAILS_DEFAULT_DATA_RESERVED;
+        else if(index == 3)
+            DELIVERY_DETAILS_ITEM_SLOT_3 = DELIVERY_DETAILS_DEFAULT_DATA_RESERVED;
+        else if(index == 4)
+            DELIVERY_DETAILS_ITEM_SLOT_4 = DELIVERY_DETAILS_DEFAULT_DATA_RESERVED;
+        else if(index == 5)
+            DELIVERY_DETAILS_ITEM_SLOT_5 = DELIVERY_DETAILS_DEFAULT_DATA_RESERVED;
+        else if(index == 6)
+            DELIVERY_DETAILS_ITEM_SLOT_6 = DELIVERY_DETAILS_DEFAULT_DATA_RESERVED;
+        else if(index == 7)
+            DELIVERY_DETAILS_ITEM_SLOT_7 = DELIVERY_DETAILS_DEFAULT_DATA_RESERVED;
+        else if(index == 8)
+            DELIVERY_DETAILS_ITEM_SLOT_8 = DELIVERY_DETAILS_DEFAULT_DATA_RESERVED;
+        else if(index == 9)
+            DELIVERY_DETAILS_ITEM_SLOT_9 = DELIVERY_DETAILS_DEFAULT_DATA_RESERVED;
+        setDirty();
+    }
+
+    public void deliveredSuccessfully(int index)
+    {
+        if(index == 0)
+            DELIVERY_DETAILS_ITEM_SLOT_0 = DELIVERY_DETAILS_DEFAULT_DATA;
+        else if(index == 1)
+            DELIVERY_DETAILS_ITEM_SLOT_1 = DELIVERY_DETAILS_DEFAULT_DATA;
+        else if(index == 2)
+            DELIVERY_DETAILS_ITEM_SLOT_2 = DELIVERY_DETAILS_DEFAULT_DATA;
+        else if(index == 3)
+            DELIVERY_DETAILS_ITEM_SLOT_3 = DELIVERY_DETAILS_DEFAULT_DATA;
+        else if(index == 4)
+            DELIVERY_DETAILS_ITEM_SLOT_4 = DELIVERY_DETAILS_DEFAULT_DATA;
+        else if(index == 5)
+            DELIVERY_DETAILS_ITEM_SLOT_5 = DELIVERY_DETAILS_DEFAULT_DATA;
+        else if(index == 6)
+            DELIVERY_DETAILS_ITEM_SLOT_6 = DELIVERY_DETAILS_DEFAULT_DATA;
+        else if(index == 7)
+            DELIVERY_DETAILS_ITEM_SLOT_7 = DELIVERY_DETAILS_DEFAULT_DATA;
+        else if(index == 8)
+            DELIVERY_DETAILS_ITEM_SLOT_8 = DELIVERY_DETAILS_DEFAULT_DATA;
+        else if(index == 9)
+            DELIVERY_DETAILS_ITEM_SLOT_9 = DELIVERY_DETAILS_DEFAULT_DATA;
+        setDirty();
     }
 }

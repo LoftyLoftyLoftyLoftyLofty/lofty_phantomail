@@ -63,6 +63,7 @@ Phantom Courier
 -> gracefully handle courier struck by lightning
 -> handle courier repelled by cats
 -> gracefully handle finding an appropriate mailbox when spawned via egg
+-> verify that unsafe item delivery mode and safe item delivery mode are both working
 
 Overnight Delivery
 -> tick the send-and-receive funcs on valid / loaded mailboxes if all players on a server sleep
