@@ -14,7 +14,7 @@ public class PhantomailCourierRenderer extends MobRenderer<PhantomailCourierEnti
 
     public PhantomailCourierRenderer(EntityRendererProvider.Context context)
     {
-        super(context, new PhantomailCourierModel<>(context.bakeLayer(PhantomailCourierModel.LAYER_LOCATION)), 1);
+        super(context, new PhantomailCourierModel<>(context.bakeLayer(PhantomailCourierModel.LAYER_LOCATION)), 0.5F);
         this.addLayer(new PhantomailCourierEyesLayer<>(this));
     }
 
