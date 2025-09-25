@@ -367,10 +367,12 @@ public class PhantomailboxRegistrySavedData extends SavedData
             boolean intendedDeliveryTarget = Objects.equals(details.get(DETAILS_INDEX_UUID_TO), uuid);
             //pull any item from the queue intended for a null mailbox
             boolean nullKey = Objects.equals(details.get(DETAILS_INDEX_UUID_TO),PhantomailboxBlockEntity.DEFAULT_UUID);
-            //pull any item from the queue intended for a dead mailbox
-            boolean staleMail = !validMailboxUUID(details.get(DETAILS_INDEX_UUID_TO));
+            //pull any item from the queue intended for a dead mailbox which was sent by this mailbox
+            boolean staleMail = (!validMailboxUUID(details.get(DETAILS_INDEX_UUID_TO))) && (Objects.equals(details.get(DETAILS_INDEX_UUID_FROM),uuid));
+            //pull any item from the queue where both uuids are invalid
+            boolean undeliverableMail = (!validMailboxUUID(details.get(DETAILS_INDEX_UUID_TO))) && (!validMailboxUUID(details.get(DETAILS_INDEX_UUID_FROM)));
 
-            if (intendedDeliveryTarget || nullKey || staleMail)
+            if (intendedDeliveryTarget || nullKey || staleMail || undeliverableMail)
             {
                 try
                 {
