@@ -88,3 +88,7 @@ Occasionally deliver spam mail to a loaded mailbox
 -> choose items by tag
 
 Learn the mixins system and evaluate use cases for this mod
+
+Display number of pending packages on stamp picker UI
+Disallow sending mail to a mailbox with more than 3 pending packages
+Admin tool of some kind to either go-to-and-fix a mailbox or some way to dump the delivery queue to a chest or something
