@@ -1,5 +1,7 @@
 package games.lofty.phantomail.block.entity;
 
+import games.lofty.phantomail.entity.ModEntities;
+import games.lofty.phantomail.entity.custom.PhantomailCourierEntity;
 import games.lofty.phantomail.savedata.PhantomailboxRegistrySavedData;
 import games.lofty.phantomail.screen.custom.PhantomailboxMenu;
 import games.lofty.phantomail.util.ModTags;
@@ -55,6 +57,10 @@ public class PhantomailboxBlockEntity extends BlockEntity implements MenuProvide
     public void setPendingCourier(boolean b)
     {courierEnRoute = b;}
 
+    //TODO - save this to block entity data
+    public int courierEnRouteCountdown = 0;
+    public void setPendingCourierDeferred()
+    {courierEnRouteCountdown = 20;}
 
     public static final int TOTAL_SLOTS = 6;
     public static final int SLOT_STAMP = 0;
@@ -137,7 +143,7 @@ public class PhantomailboxBlockEntity extends BlockEntity implements MenuProvide
         if(true)
         {
             //if it is nighttime
-            if(level.isNight())
+            if(PhantomailCourierEntity.shouldAbandonSortieDueToTimeConstraints(level) == false)
             {
                 //verifying whether the mailbox is accessible from the sky will be handled by the courier itself
                 return true;
@@ -163,7 +169,15 @@ public class PhantomailboxBlockEntity extends BlockEntity implements MenuProvide
         boolean alreadyOnTheWay = hasPendingCourier(phantomailboxBlockEntity);
 
         //invite a new courier if there isn't already one en route. egress outbound mail and ingress pending mail if space is available
-        return (!alreadyOnTheWay) && (sendingOutgoing || (canReceiveInbound && pendingMail));
+        boolean result = (!alreadyOnTheWay) && (sendingOutgoing || (canReceiveInbound && pendingMail));
+        if(result)
+        {
+            if(sendingOutgoing)
+                System.out.println("Sending outgoing");
+            if((canReceiveInbound && pendingMail))
+                System.out.println("Receiving incoming");
+        }
+        return result;
     }
 
     private static void inviteCourier(Level level, PhantomailboxBlockEntity phantomailboxBlockEntity)
@@ -171,13 +185,25 @@ public class PhantomailboxBlockEntity extends BlockEntity implements MenuProvide
         //set flag for a courier being on the way
         phantomailboxBlockEntity.setPendingCourier(true);
 
+        //if we are attempting to send outgoing mail, attempt to reserve an outbound slot
+        if(canReasonablySendOutgoingMail(phantomailboxBlockEntity))
+        {
+            PhantomailboxRegistrySavedData prsd = PhantomailboxRegistrySavedData.fromMailbox(phantomailboxBlockEntity);
+            int req = prsd.requestPendingMailSlot(phantomailboxBlockEntity.PhantomailboxDeliveryUUID);
+            if(req != PhantomailboxRegistrySavedData.NO_SLOTS_AVAILABLE)
+            {
+                prsd.updateDeliveryDetails(req, phantomailboxBlockEntity.PhantomailboxDeliveryUUID, "?", PhantomailboxRegistrySavedData.DELIVERY_STATE_COURIER_PICKING_UP);
+            }
+        }
+
         //spawn the mob
-        //TODO - spawn the actual mob. need to create the mob first
+        var courier = new PhantomailCourierEntity(ModEntities.PHANTOMAIL_COURIER.get(), level);
+        courier.lastKnownTargetMailboxPos = phantomailboxBlockEntity.getBlockPos();
+        courier.setPos(phantomailboxBlockEntity.getBlockPos().getX(), phantomailboxBlockEntity.getBlockPos().getY() + 32, phantomailboxBlockEntity.getBlockPos().getZ());
+        level.addFreshEntity(courier);
 
         //create particles to indicate that a courier is inbound
         //TODO - display particles. requires renderer?
-
-        //System.out.println("INVITING COURIER");
 
         //TODO - choose or create a more appropriate sound
         level.playSound(null, phantomailboxBlockEntity.getBlockPos(), SoundEvents.FOX_SCREECH, SoundSource.BLOCKS, 1f, 1f);
@@ -186,22 +212,27 @@ public class PhantomailboxBlockEntity extends BlockEntity implements MenuProvide
     //returns true if inventory conditions are met to send outgoing mail
     private static boolean canReasonablySendOutgoingMail(PhantomailboxBlockEntity phantomailboxBlockEntity)
     {
-        //look at the stamp slot
-        ItemStack stampSlotItemStack = phantomailboxBlockEntity.inventory.getStackInSlot(PhantomailboxBlockEntity.SLOT_STAMP);
-
-        //if the stamp is valid postage
-        if (stampSlotItemStack.is(ModTags.Items.PHANTOMAIL_VALID_POSTAGE))
+        //is there space in the queue?
+        PhantomailboxRegistrySavedData prsd = PhantomailboxRegistrySavedData.fromMailbox(phantomailboxBlockEntity);
+        if(prsd.getNextAvailableSlot() != PhantomailboxRegistrySavedData.NO_SLOTS_AVAILABLE)
         {
-            //if the player has chosen a delivery address
-            //if(w.get(ModDataComponents.PHANTOMAIL_CHOSEN_DELIVERY_ADDRESS))
-            //TODO - check the DataComponents on the stamp for a chosen delivery address. requires those components being set via GUI on the stamp itself
-            if (true)
+            //look at the stamp slot
+            ItemStack stampSlotItemStack = phantomailboxBlockEntity.inventory.getStackInSlot(PhantomailboxBlockEntity.SLOT_STAMP);
+
+            //if the stamp is valid postage
+            if (stampSlotItemStack.is(ModTags.Items.PHANTOMAIL_VALID_POSTAGE))
             {
-                //if the outgoing slot is occupied, we are trying to send mail
-                ItemStack outgoingSlotItemStack = phantomailboxBlockEntity.inventory.getStackInSlot(PhantomailboxBlockEntity.SLOT_OUTGOING);
-                if (outgoingSlotItemStack.getCount() > 0)
+                //if the player has chosen a delivery address
+                //if(w.get(ModDataComponents.PHANTOMAIL_CHOSEN_DELIVERY_ADDRESS))
+                //TODO - check the DataComponents on the stamp for a chosen delivery address. requires those components being set via GUI on the stamp itself
+                if (true)
                 {
-                    return true;
+                    //if the outgoing slot is occupied, we are trying to send mail
+                    ItemStack outgoingSlotItemStack = phantomailboxBlockEntity.inventory.getStackInSlot(PhantomailboxBlockEntity.SLOT_OUTGOING);
+                    if (outgoingSlotItemStack.getCount() > 0)
+                    {
+                        return true;
+                    }
                 }
             }
         }
@@ -280,92 +311,31 @@ public class PhantomailboxBlockEntity extends BlockEntity implements MenuProvide
                     //System.out.println(prsd.listOfAllPhantomailboxUUIDs);
                 }
 
+                //TODO - when new couriers are implemented this might need to be reevaluated
+                //if we can't deliver mail right now, we can assume that we're not expecting a courier anymore
+                if(PhantomailCourierEntity.shouldAbandonSortieDueToTimeConstraints(level) == true)
+                    phantomailboxBlockEntity.setPendingCourier(false);
+
+                //handle a short delay after couriers pick up or drop off before requesting more couriers
+                if(phantomailboxBlockEntity.courierEnRouteCountdown > 0)
+                {
+                    phantomailboxBlockEntity.courierEnRouteCountdown -= 1;
+                    if(phantomailboxBlockEntity.courierEnRouteCountdown == 0)
+                    {
+                        phantomailboxBlockEntity.setPendingCourier(false);
+                    }
+                }
+
                 //TODO - update this when multiple courier types are implemented
                 if (canReasonablyInviteCourier(level, phantomailboxBlockEntity) && shouldReasonablyInviteCourier(phantomailboxBlockEntity))
                 {
                     if( phantomailboxBlockEntity.courierEnRoute == false )
                     {
                         inviteCourier(level, phantomailboxBlockEntity);
-
-                        //TODO - code beyond this point eventually needs to move to the courier
-                        PhantomailboxRegistrySavedData prsd = PhantomailboxRegistrySavedData.fromMailbox(phantomailboxBlockEntity);
-
-                        int availableSlot = prsd.getNextAvailableSlot();
-                        if( availableSlot != PhantomailboxRegistrySavedData.NO_SLOTS_AVAILABLE)
-                        {
-                            //grab the receiver's uuid from the stamp
-                            ItemStack stamp = phantomailboxBlockEntity.inventory.getStackInSlot(PhantomailboxBlockEntity.SLOT_STAMP);
-                            //TODO - TEST DATA, NEEDS FIX
-                            String infoToUUID = phantomailboxBlockEntity.PhantomailboxDeliveryUUID;
-
-                            //TODO - if there isn't a stamp in the mailbox, or the stamp is invalid, don't send anything
-                            boolean handleOutgoingMail = true;
-                            if(handleOutgoingMail)
-                            {
-                                //store the item from the mailbox. it belongs to the system now
-
-                                //TODO give the item to the courier - the courier needs to despawn holding the item before it transfers to the system for pending delivery
-
-                                //TODO fix this
-                                if (availableSlot == 0)
-                                    prsd.DELIVERY_QUEUE_ITEM_SLOT_0 = phantomailboxBlockEntity.inventory.getStackInSlot(PhantomailboxBlockEntity.SLOT_OUTGOING);
-                                else if (availableSlot == 1)
-                                    prsd.DELIVERY_QUEUE_ITEM_SLOT_1 = phantomailboxBlockEntity.inventory.getStackInSlot(PhantomailboxBlockEntity.SLOT_OUTGOING);
-                                else if (availableSlot == 2)
-                                    prsd.DELIVERY_QUEUE_ITEM_SLOT_2 = phantomailboxBlockEntity.inventory.getStackInSlot(PhantomailboxBlockEntity.SLOT_OUTGOING);
-                                else if (availableSlot == 3)
-                                    prsd.DELIVERY_QUEUE_ITEM_SLOT_3 = phantomailboxBlockEntity.inventory.getStackInSlot(PhantomailboxBlockEntity.SLOT_OUTGOING);
-                                else if (availableSlot == 4)
-                                    prsd.DELIVERY_QUEUE_ITEM_SLOT_4 = phantomailboxBlockEntity.inventory.getStackInSlot(PhantomailboxBlockEntity.SLOT_OUTGOING);
-                                else if (availableSlot == 5)
-                                    prsd.DELIVERY_QUEUE_ITEM_SLOT_5 = phantomailboxBlockEntity.inventory.getStackInSlot(PhantomailboxBlockEntity.SLOT_OUTGOING);
-                                else if (availableSlot == 6)
-                                    prsd.DELIVERY_QUEUE_ITEM_SLOT_6 = phantomailboxBlockEntity.inventory.getStackInSlot(PhantomailboxBlockEntity.SLOT_OUTGOING);
-                                else if (availableSlot == 7)
-                                    prsd.DELIVERY_QUEUE_ITEM_SLOT_7 = phantomailboxBlockEntity.inventory.getStackInSlot(PhantomailboxBlockEntity.SLOT_OUTGOING);
-                                else if (availableSlot == 8)
-                                    prsd.DELIVERY_QUEUE_ITEM_SLOT_8 = phantomailboxBlockEntity.inventory.getStackInSlot(PhantomailboxBlockEntity.SLOT_OUTGOING);
-                                else if (availableSlot == 9)
-                                    prsd.DELIVERY_QUEUE_ITEM_SLOT_9 = phantomailboxBlockEntity.inventory.getStackInSlot(PhantomailboxBlockEntity.SLOT_OUTGOING);
-
-                                //clear the slot in the mailbox
-                                phantomailboxBlockEntity.inventory.setStackInSlot(SLOT_OUTGOING, ItemStack.EMPTY);//working
-
-                                //grab the sender's uuid from the mailbox
-                                String infoFromUUID = phantomailboxBlockEntity.PhantomailboxDeliveryUUID;
-
-                                //update the delivery details
-                                prsd.updateDeliveryDetails(availableSlot, infoToUUID, infoFromUUID, PhantomailboxRegistrySavedData.DELIVERY_STATE_COURIER_PICKING_UP);
-
-                                //remove the stamp
-                                phantomailboxBlockEntity.inventory.setStackInSlot(SLOT_STAMP, ItemStack.EMPTY);//working
-
-                                //update savedata
-                                prsd.setDirty();
-
-                                //TODO - this probably needs to move to the bottom of whatever other logic handles item delivery, after send/recv both process
-                                phantomailboxBlockEntity.setPendingCourier(false);
-                            }
-                        }
-
-                        //TODO - this is temporary code to simulate a courier holding mail
-                        //this needs to be updated to just take whichever item the courier is holding and deliver it to the mailbox
-                        //because the item will have already been removed from pending mail storage when it is given to the courier
-
-                        //if the courier is holding mail, deliver it
-                        if(!prsd.DELIVERY_QUEUE_ITEM_SLOT_0.isEmpty())
-                        {
-                            int deliverySlot = PhantomailboxBlockEntity.getNextOpenSlot(phantomailboxBlockEntity);
-                            if(deliverySlot != PhantomailboxBlockEntity.NO_SLOTS_AVAILABLE)
-                            {
-                                phantomailboxBlockEntity.inventory.setStackInSlot(deliverySlot, prsd.DELIVERY_QUEUE_ITEM_SLOT_0);
-                                prsd.DELIVERY_QUEUE_ITEM_SLOT_0 = ItemStack.EMPTY;
-                                prsd.DELIVERY_DETAILS_ITEM_SLOT_0 = PhantomailboxRegistrySavedData.DELIVERY_DETAILS_DEFAULT_DATA;
-                                prsd.setDirty();
-                            }
-                        }
                     }
                 }
+
+                //TODO - periodically clear stale items that may have ended up in the queue, such as slots we requested that didn't resolve
             }
         }
     }

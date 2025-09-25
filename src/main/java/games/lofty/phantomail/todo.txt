@@ -42,18 +42,11 @@ Mailbox polish
 -> mailbox eyes should glow in the dark
 
 Phantom Courier
--> mob spawning
--> mob pathing from sky to mailbox
--> mail delivery when courier arrives successfully
--> mail placed into pending delivery state / server storage when courier despawns (after flying back up into the sky)
--> handling situations where the courier must path to the mailbox instead of descending directly downward
 -> handle scenario where the mailbox is destroyed with the courier enroute
 -> handle scenario where mailbox contents are stolen with the courier enroute
--> animations
 -> particles
--> sound effects
+-> sound effects for deliveries and pickups
 -> display or hide parcel undercarriage depending on whether or not the courier has cargo
--> automatic despawn if pathing fails
 -> handle situation where courier gets stuck in a boat, minecart, etc
 -> gracefully handle situation involving couriers and leads
 -> gracefully handle (ignore) nether portals and end portals
@@ -67,10 +60,6 @@ Phantom Courier
 
 Overnight Delivery
 -> tick the send-and-receive funcs on valid / loaded mailboxes if all players on a server sleep
-
-Pending Mail storage / serialization / etc
-
-Consuming the stamp when mail is sent
 
 Return to Sender
 -> Handle situation where unsent outgoing stamp is addressed to invalid mailbox by immediately returning to sender

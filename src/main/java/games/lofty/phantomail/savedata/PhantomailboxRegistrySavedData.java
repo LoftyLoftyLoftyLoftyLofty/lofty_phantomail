@@ -8,6 +8,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.saveddata.SavedData;
 
+import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -220,7 +221,7 @@ public class PhantomailboxRegistrySavedData extends SavedData
 
     public void updateDeliveryDetails(int slot, String senderUUID, String deliveryUUID, int status)
     {
-        String payload = senderUUID + UNIT_SEPARATOR + deliveryUUID + UNIT_SEPARATOR + String.valueOf(status);
+        String payload = deliveryUUID + UNIT_SEPARATOR + senderUUID + UNIT_SEPARATOR + String.valueOf(status);
         //TODO - this is a very embarrassing implementation and should be corrected
         if(slot == 0)
             DELIVERY_DETAILS_ITEM_SLOT_0 = payload;
@@ -242,6 +243,25 @@ public class PhantomailboxRegistrySavedData extends SavedData
             DELIVERY_DETAILS_ITEM_SLOT_8 = payload;
         else if(slot == 9)
             DELIVERY_DETAILS_ITEM_SLOT_9 = payload;
+
+        setDirty();
+        debugDeliveryQueue();
+    }
+
+    public void debugDeliveryQueue()
+    {
+        System.out.println("---------- DELIVERY QUEUE ----------");
+        System.out.println("0: " + DELIVERY_DETAILS_ITEM_SLOT_0);
+        System.out.println("1: " + DELIVERY_DETAILS_ITEM_SLOT_1);
+        System.out.println("2: " + DELIVERY_DETAILS_ITEM_SLOT_2);
+        System.out.println("3: " + DELIVERY_DETAILS_ITEM_SLOT_3);
+        System.out.println("4: " + DELIVERY_DETAILS_ITEM_SLOT_4);
+        System.out.println("5: " + DELIVERY_DETAILS_ITEM_SLOT_5);
+        System.out.println("6: " + DELIVERY_DETAILS_ITEM_SLOT_6);
+        System.out.println("7: " + DELIVERY_DETAILS_ITEM_SLOT_7);
+        System.out.println("8: " + DELIVERY_DETAILS_ITEM_SLOT_8);
+        System.out.println("9: " + DELIVERY_DETAILS_ITEM_SLOT_9);
+        System.out.println("------------------------------------");
     }
 
     //TODO - improve this later
@@ -342,9 +362,26 @@ public class PhantomailboxRegistrySavedData extends SavedData
         for(x=0;x<n;++x)
         {
             ArrayList<String> details = new ArrayList<>(Arrays.asList(entries[x].split("\\" + UNIT_SEPARATOR)));
-            if (Objects.equals(details.get(DETAILS_INDEX_UUID_TO), uuid))
+
+            //pull any item from the queue intended for this mailbox
+            boolean intendedDeliveryTarget = Objects.equals(details.get(DETAILS_INDEX_UUID_TO), uuid);
+            //pull any item from the queue intended for a null mailbox
+            boolean nullKey = Objects.equals(details.get(DETAILS_INDEX_UUID_TO),PhantomailboxBlockEntity.DEFAULT_UUID);
+            //pull any item from the queue intended for a dead mailbox
+            boolean staleMail = !validMailboxUUID(details.get(DETAILS_INDEX_UUID_TO));
+
+            if (intendedDeliveryTarget || nullKey || staleMail)
             {
-                return x;
+                try
+                {
+                    int status = Integer.valueOf(details.get(DETAILS_INDEX_STATUS));
+                    if (status == PhantomailboxRegistrySavedData.DELIVERY_STATE_PENDING_MAIL)
+                        return x;
+                }
+                catch(Exception e)
+                {
+                    continue;
+                }
             }
         }
         return NO_SLOTS_AVAILABLE;
@@ -375,7 +412,32 @@ public class PhantomailboxRegistrySavedData extends SavedData
         return null;
     }
 
-    public int requestPendingMailSlot()
+    public void clearItemFromSlot(int slot)
+    {
+        if(slot == 0)
+            DELIVERY_QUEUE_ITEM_SLOT_0 = ItemStack.EMPTY;
+        else if(slot == 1)
+            DELIVERY_QUEUE_ITEM_SLOT_1 = ItemStack.EMPTY;
+        else if(slot == 2)
+            DELIVERY_QUEUE_ITEM_SLOT_2 = ItemStack.EMPTY;
+        else if(slot == 3)
+            DELIVERY_QUEUE_ITEM_SLOT_3 = ItemStack.EMPTY;
+        else if(slot == 4)
+            DELIVERY_QUEUE_ITEM_SLOT_4 = ItemStack.EMPTY;
+        else if(slot == 5)
+            DELIVERY_QUEUE_ITEM_SLOT_5 = ItemStack.EMPTY;
+        else if(slot == 6)
+            DELIVERY_QUEUE_ITEM_SLOT_6 = ItemStack.EMPTY;
+        else if(slot == 7)
+            DELIVERY_QUEUE_ITEM_SLOT_7 = ItemStack.EMPTY;
+        else if(slot == 8)
+            DELIVERY_QUEUE_ITEM_SLOT_8 = ItemStack.EMPTY;
+        else if(slot == 9)
+            DELIVERY_QUEUE_ITEM_SLOT_9 = ItemStack.EMPTY;
+        setDirty();
+    }
+
+    public int requestPendingMailSlot(@Nullable String uuidOfSendingMailbox)
     {
         String[] details = {
                 DELIVERY_DETAILS_ITEM_SLOT_0,
@@ -391,6 +453,23 @@ public class PhantomailboxRegistrySavedData extends SavedData
         };
         int x;
         int n = details.length;
+
+        //if uuid is provided...
+        if(uuidOfSendingMailbox != null)
+        {
+            //scan through for a pending outbound slot for our uuid with an unknown destination and return that preferentially
+            for (x = 0; x < n; ++x)
+            {
+                ArrayList<String> slotDetails = getDetailsFromSlot(x);
+                String slotSenderUUID = slotDetails.get(DETAILS_INDEX_UUID_FROM);
+                if (Objects.equals(slotSenderUUID, uuidOfSendingMailbox))
+                {
+                    return x;
+                }
+            }
+        }
+
+        //otherwise attempt to return an empty slot
         for(x=0;x<n;++x)
         {
             if(Objects.equals(details[x], DELIVERY_DETAILS_DEFAULT_DATA))
@@ -450,5 +529,52 @@ public class PhantomailboxRegistrySavedData extends SavedData
         else if(index == 9)
             DELIVERY_DETAILS_ITEM_SLOT_9 = DELIVERY_DETAILS_DEFAULT_DATA;
         setDirty();
+        debugDeliveryQueue();
+    }
+
+    public ArrayList<String> getDetailsFromSlot(int slot)
+    {
+        if(slot == 0)
+            return new ArrayList<>(Arrays.asList(DELIVERY_DETAILS_ITEM_SLOT_0.split("\\" + UNIT_SEPARATOR)));
+        else if(slot == 1)
+            return new ArrayList<>(Arrays.asList(DELIVERY_DETAILS_ITEM_SLOT_1.split("\\" + UNIT_SEPARATOR)));
+        else if(slot == 2)
+            return new ArrayList<>(Arrays.asList(DELIVERY_DETAILS_ITEM_SLOT_2.split("\\" + UNIT_SEPARATOR)));
+        else if(slot == 3)
+            return new ArrayList<>(Arrays.asList(DELIVERY_DETAILS_ITEM_SLOT_3.split("\\" + UNIT_SEPARATOR)));
+        else if(slot == 4)
+            return new ArrayList<>(Arrays.asList(DELIVERY_DETAILS_ITEM_SLOT_4.split("\\" + UNIT_SEPARATOR)));
+        else if(slot == 5)
+            return new ArrayList<>(Arrays.asList(DELIVERY_DETAILS_ITEM_SLOT_5.split("\\" + UNIT_SEPARATOR)));
+        else if(slot == 6)
+            return new ArrayList<>(Arrays.asList(DELIVERY_DETAILS_ITEM_SLOT_6.split("\\" + UNIT_SEPARATOR)));
+        else if(slot == 7)
+            return new ArrayList<>(Arrays.asList(DELIVERY_DETAILS_ITEM_SLOT_7.split("\\" + UNIT_SEPARATOR)));
+        else if(slot == 8)
+            return new ArrayList<>(Arrays.asList(DELIVERY_DETAILS_ITEM_SLOT_8.split("\\" + UNIT_SEPARATOR)));
+        else if(slot == 9)
+            return new ArrayList<>(Arrays.asList(DELIVERY_DETAILS_ITEM_SLOT_9.split("\\" + UNIT_SEPARATOR)));
+        else
+            return new ArrayList<>(Arrays.asList(DELIVERY_DETAILS_DEFAULT_DATA.split("\\" + UNIT_SEPARATOR)));
+    }
+
+    public boolean validMailboxUUID(String uuid)
+    {
+        ArrayList<String> uuids = new ArrayList<>(Arrays.asList(listOfAllPhantomailboxUUIDs.split("\\" + RECORD_SEPARATOR)));
+        boolean found = false;
+        int x;
+        int n = uuids.toArray().length;
+        for(x=0; x<n; ++x)
+        {
+            ArrayList<String> entry = new ArrayList<>(Arrays.asList(uuids.get(x).split("\\" + UNIT_SEPARATOR)));
+            if(Objects.equals(entry.get(RECORD_INDEX_UUID), uuid))
+            {
+                found = true;
+                break;
+            }
+        }
+        if(!found)
+            return false;
+        return true;
     }
 }
