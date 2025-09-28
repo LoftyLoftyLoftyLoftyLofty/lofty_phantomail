@@ -6,6 +6,7 @@ import games.lofty.phantomail.savedata.PhantomailboxRegistrySavedData;
 import games.lofty.phantomail.screen.custom.PhantomailboxMenu;
 import games.lofty.phantomail.util.ModTags;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
@@ -24,7 +25,9 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.neoforged.neoforge.items.IItemHandler;
 import net.neoforged.neoforge.items.ItemStackHandler;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Objects;
@@ -69,6 +72,46 @@ public class PhantomailboxBlockEntity extends BlockEntity implements MenuProvide
     public static final int SLOT_INCOMING_1 = 3;
     public static final int SLOT_INCOMING_2 = 4;
     public static final int SLOT_INCOMING_3 = 5;
+
+    @Nullable
+    /// Specifically for other blocks interacting with the mailbox (?)
+    public IItemHandler getItemHandler(@Nullable Direction side)
+    {
+        if( side == null )
+            return null;
+
+        return inventoryAutomated;
+    }
+
+    /// This provides some overrides for blocks interacting with the mailbox which don't affect player interactions
+    public final ItemStackHandler inventoryAutomated = new ItemStackHandler(TOTAL_SLOTS)
+    {
+        @Override
+        public @NotNull ItemStack insertItem(int slot, @NotNull ItemStack stack, boolean simulate)
+        {
+            if (slot == PhantomailboxBlockEntity.SLOT_STAMP)
+            {
+                if(stack.is(ModTags.Items.PHANTOMAIL_VALID_POSTAGE))
+                    return inventory.insertItem(slot, stack, simulate);
+            }
+            else if (slot == PhantomailboxBlockEntity.SLOT_OUTGOING)
+            {
+                return inventory.insertItem(slot, stack, simulate);
+            }
+            return stack;
+        }
+
+        @Override
+        public @NotNull ItemStack extractItem(int slot, int amount, boolean simulate)
+        {
+            if (slot == PhantomailboxBlockEntity.SLOT_STAMP)
+                return ItemStack.EMPTY;
+            else if(slot == PhantomailboxBlockEntity.SLOT_OUTGOING)
+                return ItemStack.EMPTY;
+            else
+                return inventory.extractItem(slot, amount, simulate);
+        }
+    };
 
     public final ItemStackHandler inventory = new ItemStackHandler(TOTAL_SLOTS) {
         @Override

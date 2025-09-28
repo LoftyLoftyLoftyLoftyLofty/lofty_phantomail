@@ -1,10 +1,8 @@
 package games.lofty.phantomail.entity.custom;
 
-import games.lofty.phantomail.block.custom.PhantomailboxBlock;
 import games.lofty.phantomail.block.entity.PhantomailboxBlockEntity;
 import games.lofty.phantomail.savedata.PhantomailboxRegistrySavedData;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
@@ -20,13 +18,9 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.pathfinder.PathType;
 import net.minecraft.world.phys.Vec3;
-import net.neoforged.neoforge.items.ItemStackHandler;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Objects;
-
-import static java.lang.Math.cos;
 
 public class PhantomailCourierEntity extends FlyingMob
 {
@@ -277,6 +271,47 @@ public class PhantomailCourierEntity extends FlyingMob
     public static boolean shouldAbandonSortieDueToTimeConstraints(Level level)
     {return (level.getDayTime() < TIME_DARKEST_NIGHT) || (level.getDayTime() > TIME_ABANDON_SORTIE);}
 
+    public static Vec3 rotateVector(Vec3 v, Vec3 k, double angle)
+    {
+        Vec3 kNormalized = k.normalize();
+        double cosTheta = Math.cos(angle);
+        double sinTheta = Math.sin(angle);
+        Vec3 term1 = v.scale(cosTheta);
+        Vec3 term2 = kNormalized.cross(v).scale(sinTheta);
+        Vec3 term3 = kNormalized.scale(kNormalized.dot(v) * (1 - cosTheta));
+        return term1.add(term2).add(term3);
+    }
+
+    Vec3 steadyForwardVelocity()
+    {
+        return rotateVector(new Vec3(1,0,0), new Vec3(0,1,0), Math.PI * getYRot() / 180);
+    }
+
+    //TODO - this isn't working and seems to make the pathfinder abort what it's doing
+
+    //it would be cool to have the courier circle in above the mailbox but that polish may have to wait until later
+    //for the sake of shipping the mod at all
+
+    public void nudgeForward()
+    {
+        Vec3 v = steadyForwardVelocity();
+        Vec3 cur = getDeltaMovement();
+        Vec3 flat = new Vec3(cur.x, 0, cur.z);
+        double curFlat = flat.length();
+        System.out.println("VX: " + flat.toString());
+        System.out.println("XR: " + String.valueOf(getXRot()));
+        System.out.println("YR: " + String.valueOf(getYRot()));
+        System.out.println("CF: " + String.valueOf(curFlat));
+
+        //normal movement with the flying movecontroller is between 0.14 and 0.17 on average, so we nudge forward gently here to 0.18
+        double desiredFactor = 0.18 - curFlat;
+        if(desiredFactor < 0)
+            desiredFactor = 0;
+
+        //not sure why this has to be a negative value to make the phantom move forward
+        addDeltaMovement(v.scale(0.1 * desiredFactor));
+    }
+
     /// Functions that get performed during the initialization tick of the courier
     private void handleStateMachineInit(PhantomailboxBlockEntity targetMailbox)
     {
@@ -321,6 +356,7 @@ public class PhantomailCourierEntity extends FlyingMob
     private void handleStateMachineIngress(PhantomailboxBlockEntity targetMailbox)
     {
         //System.out.println("ENTER INGRESS Sender / Receiver: " + currentlyHandlingDeliveryUUIDSender + " / " + currentlyHandlingDeliveryUUIDReceiver);
+        //nudgeForward();
 
         //if we don't have a target mailbox, abandon sortie
         if ((targetMailbox == null) || shouldAbandonSortieDueToTimeConstraints(this.level()))

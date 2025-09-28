@@ -10,6 +10,8 @@ import games.lofty.phantomail.record.ModPayloads;
 import games.lofty.phantomail.screen.ModMenuTypes;
 import games.lofty.phantomail.screen.custom.PhantomailboxScreen;
 import net.minecraft.client.renderer.entity.EntityRenderers;
+import net.neoforged.neoforge.capabilities.Capabilities;
+import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
 import net.neoforged.neoforge.client.event.RegisterMenuScreensEvent;
 import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
 import org.slf4j.Logger;
@@ -115,8 +117,15 @@ public class Phantomail {
 
         @SubscribeEvent // on the mod event bus
         public static void registerPayloads(final RegisterPayloadHandlersEvent event)
+        {ModPayloads.register(event);}
+
+        @SubscribeEvent
+        public static void registerCapabilities(RegisterCapabilitiesEvent event)
         {
-            ModPayloads.register(event);
-        }
+            event.registerBlockEntity(
+                Capabilities.ItemHandler.BLOCK, // capability to register for
+                ModBlockEntities.PHANTOMAILBOX_BE.get(), // block entity type to register for
+                (myBlockEntity, side) -> myBlockEntity.getItemHandler(side)
+        );}
     }
 }
