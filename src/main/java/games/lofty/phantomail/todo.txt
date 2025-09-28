@@ -2,10 +2,8 @@ Better data serialization for registering mailboxes
 -> ideally this will allow for the serialization of their uuid, name, dimension, location, etc in one entry
 
 Hopper handling
--> received mail can be hoppered out from the bottom
 -> automatically inserting stamps to stamp slot requires that the stamp is addressed
 -> automatically inserting unaddressed stamps defaults to outgoing slot
--> automatically inserting anything else goes to the outgoing slot
 -> crafting recipe for stamp address duplication at the Crafter block
 
 Redstone handling

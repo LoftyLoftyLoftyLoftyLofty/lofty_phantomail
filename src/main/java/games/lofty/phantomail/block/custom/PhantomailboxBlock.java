@@ -4,6 +4,7 @@ import com.mojang.serialization.MapCodec;
 import games.lofty.phantomail.block.entity.ModBlockEntities;
 import games.lofty.phantomail.block.entity.PhantomailboxBlockEntity;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
@@ -22,7 +23,9 @@ import net.minecraft.world.level.block.entity.BlockEntityTicker;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.DirectionProperty;
+import net.minecraft.world.level.block.state.properties.IntegerProperty;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
@@ -32,12 +35,26 @@ import static net.minecraft.world.level.block.HorizontalDirectionalBlock.FACING;
 
 public class PhantomailboxBlock extends BaseEntityBlock {
 
+    public static final IntegerProperty POWER = BlockStateProperties.POWER;
+
     public static final VoxelShape SHAPE = Block.box( 2, 0, 2, 14, 13, 14 );
     public static final MapCodec<PhantomailboxBlock> CODEC = simpleCodec(PhantomailboxBlock::new);
 
     protected VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context)
     {
         return SHAPE;
+    }
+
+    @Override
+    protected int getSignal(BlockState blockState, BlockGetter blockAccess, BlockPos pos, Direction side)
+    {
+        return blockState.getValue(POWER);
+    }
+
+    @Override
+    protected int getDirectSignal(BlockState blockState, BlockGetter level, BlockPos pos, Direction direction)
+    {
+        return blockState.getValue(POWER);
     }
 
     public PhantomailboxBlock(Properties properties) {
@@ -107,11 +124,12 @@ public class PhantomailboxBlock extends BaseEntityBlock {
     @Override
     protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
         builder.add(FACING);
+        builder.add(POWER);
     }
 
     @Override
     public BlockState getStateForPlacement(BlockPlaceContext context) {
-        return this.defaultBlockState().setValue(FACING, context.getHorizontalDirection().getOpposite());
+        return this.defaultBlockState().setValue(FACING, context.getHorizontalDirection().getOpposite()).setValue(POWER, 0);
     }
     /**
      * Returns the blockstate with the given rotation from the passed blockstate. If inapplicable, returns the passed blockstate.

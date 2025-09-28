@@ -3,8 +3,8 @@ Thank you for the in-depth tutorials on how to get started with modding for Mine
 Without this series of tutorials, I probably wouldn't have even gotten started.
 
 GauntRecluse
-Thank you for all of the guidance and patience you provided as I picked up the modding api and learned the basics.
-I am grateful for the help!
+Thank you for all of the guidance and patience you provided as I picked up the modding api and learned the basics, as well as the detailed code samples and suggestions to improve the mod's code!
+I am grateful for the assistance!
 
 alegian
 ChiefArug
@@ -17,4 +17,4 @@ XfactHD
 Thank you for your assistance with learning the modding api, providing helpful links to documentation, and answering lots of my many, many questions.
 
 Commoble
-Thank you for the code samples to learn from!
+Thank you for the many code samples to learn from!

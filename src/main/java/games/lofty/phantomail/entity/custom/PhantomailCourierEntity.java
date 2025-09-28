@@ -485,6 +485,9 @@ public class PhantomailCourierEntity extends FlyingMob
 
                     //clear the slot too
                     currentlyHandlingDeliverySlotIndex = PhantomailboxRegistrySavedData.NO_SLOTS_AVAILABLE;
+
+                    //tell the mailbox to pulse
+                    targetMailbox.emitRedstoneSignal(true);
                 }
                 else debugMe("(Interact) No room in mailbox for incoming item");
             }
@@ -544,6 +547,9 @@ public class PhantomailCourierEntity extends FlyingMob
 
                         //remove the stamp
                         targetMailbox.inventory.setStackInSlot(PhantomailboxBlockEntity.SLOT_STAMP, ItemStack.EMPTY);//working
+
+                        //tell the mailbox to pulse
+                        targetMailbox.emitRedstoneSignal(true);
                     }
                     else
                     {

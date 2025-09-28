@@ -25,6 +25,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.neoforged.neoforge.items.IItemHandler;
 import net.neoforged.neoforge.items.ItemStackHandler;
 import org.jetbrains.annotations.NotNull;
@@ -50,6 +51,9 @@ public class PhantomailboxBlockEntity extends BlockEntity implements MenuProvide
 
     //TODO - this display string is what is shown in the GUI when players are choosing a delivery address
     public String PhantomailboxDisplayAddress = "My mailbox";
+
+    /// Ticks of redstone signal output remaining
+    public int remainingActivationTicks = 0;
 
     //whether or not we've spawned a mail delivery mob of some kind
     public boolean courierEnRoute = false;
@@ -133,6 +137,17 @@ public class PhantomailboxBlockEntity extends BlockEntity implements MenuProvide
         }
     };
 
+    public void emitRedstoneSignal(boolean io)
+    {
+        int v = 0;
+        if(io)
+            v = 15;
+
+        level.setBlock(getBlockPos(), getBlockState().setValue(BlockStateProperties.POWER, v), 3);
+        level.updateNeighborsAt(getBlockPos(),getBlockState().getBlock());
+        remainingActivationTicks = 20;
+    }
+
     public void drops() {
         SimpleContainer inv = new SimpleContainer(inventory.getSlots());
         int x = TOTAL_SLOTS;
@@ -148,6 +163,7 @@ public class PhantomailboxBlockEntity extends BlockEntity implements MenuProvide
         super.saveAdditional(tag, registries);
         tag.put("inventory",inventory.serializeNBT(registries));
         tag.putString("uuid",PhantomailboxDeliveryUUID);
+        tag.putInt("remainingActivationTicks",remainingActivationTicks);
     }
 
     @Override
@@ -155,6 +171,7 @@ public class PhantomailboxBlockEntity extends BlockEntity implements MenuProvide
         super.loadAdditional(tag, registries);
         inventory.deserializeNBT(registries, tag.getCompound("inventory"));
         PhantomailboxDeliveryUUID = tag.getString("uuid");
+        remainingActivationTicks = tag.getInt("remainingActivationTicks");
     }
 
     @Override
@@ -344,6 +361,13 @@ public class PhantomailboxBlockEntity extends BlockEntity implements MenuProvide
             //figure out which mailbox it is
             if (level.getBlockEntity(blockPos) instanceof PhantomailboxBlockEntity phantomailboxBlockEntity)
             {
+                //update redstone pulse countdown
+                if(phantomailboxBlockEntity.remainingActivationTicks > 0)
+                {
+                    phantomailboxBlockEntity.remainingActivationTicks -= 1;
+                    if(phantomailboxBlockEntity.remainingActivationTicks <= 0)
+                        phantomailboxBlockEntity.emitRedstoneSignal(false);
+                }
                 //if the mailbox is ticking for the first time, assign it a new uuid (or load its saved uuid)
                 phantomailboxBlockEntity.initializeUUID();
                 if(phantomailboxBlockEntity.hasInitializedSavedData == false)
