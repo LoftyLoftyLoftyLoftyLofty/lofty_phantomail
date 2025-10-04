@@ -128,6 +128,13 @@ public class PhantomailboxBlock extends BaseEntityBlock {
     }
 
     @Override
+    public boolean canConnectRedstone(BlockState state, BlockGetter level, BlockPos pos, @Nullable Direction direction)
+    {
+        return true;
+        //return super.canConnectRedstone(state, level, pos, direction);
+    }
+
+    @Override
     public BlockState getStateForPlacement(BlockPlaceContext context) {
         return this.defaultBlockState().setValue(FACING, context.getHorizontalDirection().getOpposite()).setValue(POWER, 0);
     }
